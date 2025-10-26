@@ -16,7 +16,7 @@ using Pkg; Pkg.add("BlackBoxOptim")
 ```
 or latest master directly from github:
 ```julia
-using Pkg; Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
+using Pkg; Pkg.add(url="https://github.com/robertfeldt/BlackBoxOptim.jl") #Use Pkg.clone if using an older Julia version
 ```
 from a Julia repl.
 
