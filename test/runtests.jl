@@ -78,19 +78,18 @@ end
 
 end
 
-using CPUTime
-
-starttime = CPUtime_us()
+starttime = time()
 @testset "BlackBoxOptim test suite" begin
 
 for t in TestFiles
-    Main.TimeTestExecution && CPUtic()
+    local test_start_time
+    Main.TimeTestExecution && (test_start_time = time())
 
     # Including the test file runs the tests in there...
     include(t)
 
     if Main.TimeTestExecution
-        elapsed = CPUtoq()
+        elapsed = time() - test_start_time
         datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
         push!(timing_data, [datestr, versionstr, gitstr, t, elapsed])
     end
@@ -98,7 +97,7 @@ for t in TestFiles
 end
 println() # So Base.Test summary is correctly aligned...
 end
-elapsed = float(CPUtime_us() - starttime)/1e6
+elapsed = time() - starttime
 
 if Main.TimeTestExecution
     datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())

@@ -1,5 +1,3 @@
-using CPUTime
-
 function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
     Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
 
@@ -7,7 +5,7 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
 
     results = Any[]
     for m in Methods
-        CPUtic()
+        t0 = time()
         res = nothing
         try
             res = bboptimize(functionOrProblem, parameters; Method = m)
@@ -16,7 +14,7 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
             push!(results, (m, e, nothing, missing, missing))
         end
         if res !== nothing
-            push!(results, (m, "ok", best_candidate(res), best_fitness(res), CPUtoq()))
+            push!(results, (m, "ok", best_candidate(res), best_fitness(res), time() - t0))
         end
     end
 
