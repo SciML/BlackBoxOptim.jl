@@ -1,6 +1,6 @@
 name = "BlackBoxOptim"
 uuid = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
-version = "0.6.3"
+version = "0.6.4"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
