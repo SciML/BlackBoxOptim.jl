@@ -67,7 +67,7 @@
             append!(p1, p2)
             @test numdims(p1) == 2
             @test popsize(p1) == 15
-            @test p1[11] == p2[1]
+            @test isequal(p1[11], p2[1])
             @test fitness(p1, 12) == 4.0
 
             p3 = FitPopulation(fs, 5, 1)
