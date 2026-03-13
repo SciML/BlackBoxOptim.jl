@@ -33,3 +33,19 @@ res = bboptimize(myfit(c, rosenbrock2d); SearchRange = (-5.0, 5.0), NumDimension
 @test MFE <= c.count <= (MFE+20) # Must be at least 10 but can be somewhat higher since might be several evaluations per step of the optimizer
 
 end
+
+@testset "MaxStepsWithoutProgress (single objective)" begin
+    flat_objective(x) = 1.0
+    max_steps_without_progress = 3
+
+    res = bboptimize(flat_objective;
+        SearchRange = (-5.0, 5.0),
+        NumDimensions = 2,
+        Method = :random_search,
+        MaxSteps = 10_000,
+        MaxStepsWithoutProgress = max_steps_without_progress,
+        TraceMode = :silent)
+
+    @test BlackBoxOptim.stop_reason(res) == "No progress for more than $(max_steps_without_progress) iterations"
+    @test BlackBoxOptim.iterations(res) == max_steps_without_progress + 2
+end
