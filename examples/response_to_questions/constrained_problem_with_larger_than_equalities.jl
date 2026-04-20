@@ -35,7 +35,7 @@ penalized_fitness(x::Vector{Float64}) = origfitness(x) + K * residual(x)
 # Let's run the optimizer. Problem is small/simple so we don't need to run for long, at least on my machine...
 res = bboptimize(penalized_fitness; SearchRange, MaxTime = 1.0);
 
-# Let's check constraints are fullfilled
+# Let's check constraints are fulfilled
 bestsolution = best_candidate(res)
 @assert inequality1(bestsolution) == 0.0
 @assert bestsolution[1] > bestsolution[2]

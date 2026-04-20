@@ -40,7 +40,7 @@ iterate_candidates(candidates, state, nafitness::Nothing) =
     isnothing(state) ? iterate(candidates) : iterate(candidates, state)
 
 # wrapper around iterate() that skips candidate, if their fitness
-# doens't match nafitness
+# doesn't match nafitness
 function iterate_candidates(candidates, state, nafitness)
     next = isnothing(state) ? iterate(candidates) : iterate(candidates, state)
     while !isnothing(next) && !isequal(next[1].fitness, nafitness)

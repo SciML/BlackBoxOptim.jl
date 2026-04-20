@@ -466,13 +466,13 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
     n_ftn_imp = sum(df.FitnessSignificantBH005 .& (df.FitnessOrder .== ">"))
     printstyled("\n$n_ftn_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
                 color=n_ftn_reg > 0 ? :red : :green)
-    printstyled("\n$n_ftn_imp significant fitness improvments at Benjamini-Hochberg 0.05 level\n",
+    printstyled("\n$n_ftn_imp significant fitness improvements at Benjamini-Hochberg 0.05 level\n",
                 color=n_ftn_imp > 0 ? :green : :white)
     n_time_reg = sum(df.TimeSignificantBH005 .& (df.TimeOrder .== "<"))
     n_time_imp = sum(df.TimeSignificantBH005 .& (df.TimeOrder .== ">"))
     printstyled("\n$n_time_reg significant time regressions at Benjamini-Hochberg 0.05 level\n",
                 color=n_time_reg > 0 ? :red : :green)
-    printstyled("\n$n_time_imp significant time improvments at Benjamini-Hochberg 0.05 level\n",
+    printstyled("\n$n_time_imp significant time improvements at Benjamini-Hochberg 0.05 level\n",
                 color=n_time_imp > 0 ? :green : :white)
 end
 

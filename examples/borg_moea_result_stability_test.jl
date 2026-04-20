@@ -3,7 +3,7 @@ using BlackBoxOptim
 if length(ARGS) >= 1
   maxtime = parse(Float64, ARGS[1])
 else
-  maxtime = 0.3 # Time used in orignal (flaky) tests...
+  maxtime = 0.3 # Time used in original (flaky) tests...
 end
 
 if length(ARGS) >= 2

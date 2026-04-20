@@ -1,7 +1,7 @@
 """
 Simple random `IndividualsSelector`.
 
-The probabilties of all candidates are equal.
+The probabilities of all candidates are equal.
 """
 struct SimpleSelector <: IndividualsSelector
 end
