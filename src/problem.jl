@@ -42,7 +42,7 @@ mutable struct FunctionBasedProblem{F,FS<:FitnessScheme,SS<:SearchSpace,FO} <: O
         if FO <: Number
             fitness_type(fitness_scheme) == FO ||
                 throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))
-            if isnafitness(opt_value, fitness_scheme) # if NA fitness is given, the problem is unbouned
+            if isnafitness(opt_value, fitness_scheme) # if NA fitness is given, the problem is unbounded
                 opt_value = nothing
                 #throw(ArgumentError("Known optimal value cannot be NA"))
             end

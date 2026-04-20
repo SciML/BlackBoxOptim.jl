@@ -11,7 +11,7 @@ haltonsequence(b, n) = haltonnumber.(b, 1:n)
 Generate the `n`-th Halton number in the sequence with base `b`.
 
 # Note
-    Implementation is based on the psudo code in:
+    Implementation is based on the pseudo code in:
         http://en.wikipedia.org/wiki/Halton_sequence
 """
 function haltonnumber(base::Integer, index::Integer)

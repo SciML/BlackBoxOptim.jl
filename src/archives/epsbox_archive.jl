@@ -50,8 +50,8 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
 
     num_candidates::Int               # Number of calls to add_candidate!()
     best_front_elem::EpsBoxFrontierIndividual{N,F} # best frontier element: the candidate with the best aggregated fitness
-    last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occured
-    last_restart::Int                 # when (wrt num_dlast) last restart has occured
+    last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occurred
+    last_restart::Int                 # when (wrt num_dlast) last restart has occurred
     n_restarts::Int                   # the counter of the method restarts
     n_oversize_inserts::Int           # how many times the candidates were inserted into oversized archive
 

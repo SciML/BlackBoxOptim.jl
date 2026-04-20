@@ -11,7 +11,7 @@ struct BonesaTuner
     num_utility_values
 end
 
-# The predicted utility of a parameter vector x on problem is a weigthed, kernel
+# The predicted utility of a parameter vector x on problem is a weighted, kernel
 # smoothed average of the utilities of the vectors in the archive.
 function predicted_utility(ba::BonesaArchive, x, problem)
 end
@@ -41,7 +41,7 @@ function tune_parameters(bt::BonesaTuner, max_hours = 1.0)
 
     # Iteratively add to archive as we learn more about which param vectors are good.
     while( !time_is_up(bt) )
-        # Update constants and temp calcs needed to calc pareto strenght below
+        # Update constants and temp calcs needed to calc pareto strength below
     end
 
     # Select the terminal set (pareto front) of the param vectors.

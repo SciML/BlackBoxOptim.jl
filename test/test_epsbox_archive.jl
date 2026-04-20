@@ -1,6 +1,6 @@
 @testset "EpsBoxArchive" begin
     # check that frontier elements are mutually nondominated and
-    # ther are no epsilon-index duplicates
+    # there are no epsilon-index duplicates
     function check_frontier(a::EpsBoxArchive)
         for (i, el_i) in enumerate(pareto_frontier(a))
             for (j, el_j) in enumerate(pareto_frontier(a))

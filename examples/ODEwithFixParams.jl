@@ -43,14 +43,14 @@ u0 = [1.0;0.0;0.0;1.0]
 t = 0.0:0.05:1
 tspan = (0.0,1.0)
 
-# Generate Mass Matrox MM to transfrom ODE into DAE
+# Generate Mass Matrox MM to transform ODE into DAE
 MM=zeros(4,4)
 MM[1,1]=MM[2,2]=MM[3,3]=1
 
 # Generate Equation system
 ODESystem = ODEFunction(g;mass_matrix=MM)
 
-# Generate Function that creates ODE problem as function of parameters (optmization argument)
+# Generate Function that creates ODE problem as function of parameters (optimization argument)
 model_ode(p_) = ODEProblem(ODESystem, u0, tspan,p_) 
 
 # Generate Function that solves system as function of parameters, saves every s interval and save only vars we want.

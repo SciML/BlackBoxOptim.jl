@@ -7,7 +7,7 @@ const RSDefaultParameters = ParamsDict(
 The variants of the memetic search algorithms RS and RIS.
 However, we have modified them since they did not give very good performance when
 implemented as described in the papers below. Possibly, the papers are not
-unambigous and I have misinterpreted something from them...
+unambiguous and I have misinterpreted something from them...
 
 The "Resampling Search" (RS) memetic algorithm is described in:
 

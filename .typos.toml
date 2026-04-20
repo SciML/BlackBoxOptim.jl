@@ -1,0 +1,18 @@
+[default.extend-words]
+# Type parameter short name used throughout problem.jl / problem_family.jl
+FO = "FO"
+# Type alias (FrontierIndividualWrapper) in optimization_result.jl
+FIW = "FIW"
+# Variable abbreviation for BonesaArchive in experimental parameter tuning code
+ba = "ba"
+# Surname of paper author (Ono, I.) cited in the UNDX crossover docstring
+Ono = "Ono"
+# User-visible parameter-dict symbol :PrecisionTreshold in resampling_memetic_search.jl;
+# renaming would be an API change
+Treshold = "Treshold"
+# Statistical "y-hat" naming used in nonlinear regression example
+yhat = "yhat"
+
+[files]
+# Experimental / exploratory / abandoned code — not part of the shipped package.
+extend-exclude = ["spikes/**", "design/**"]
