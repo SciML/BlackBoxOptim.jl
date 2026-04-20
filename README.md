@@ -1,8 +1,8 @@
 BlackBoxOptim.jl
 ================
 
-[![CI](https://github.com/robertfeldt/BlackBoxOptim.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/robertfeldt/BlackBoxOptim.jl/actions/workflows/CI.yml?query=branch%3Amaster)
-[![codecov](https://codecov.io/gh/robertfeldt/BlackBoxOptim.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/robertfeldt/BlackBoxOptim.jl)
+[![CI](https://github.com/SciML/BlackBoxOptim.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/SciML/BlackBoxOptim.jl/actions/workflows/CI.yml?query=branch%3Amaster)
+[![codecov](https://codecov.io/gh/SciML/BlackBoxOptim.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/SciML/BlackBoxOptim.jl)
 
 
 `BlackBoxOptim` is a global optimization package for Julia (http://julialang.org/). It supports both multi- and single-objective optimization problems and is focused on (meta-)heuristic/stochastic algorithms (DE, NES etc) that do NOT require the function being optimized to be differentiable. This is in contrast to more traditional, deterministic algorithms that are often based on gradients/differentiability. It also supports parallel evaluation to speed up optimization for functions that are slow to evaluate.
@@ -16,7 +16,7 @@ using Pkg; Pkg.add("BlackBoxOptim")
 ```
 or latest master directly from github:
 ```julia
-using Pkg; Pkg.clone("https://github.com/robertfeldt/BlackBoxOptim.jl")
+using Pkg; Pkg.add(url="https://github.com/SciML/BlackBoxOptim.jl")
 ```
 from a Julia repl.
 
