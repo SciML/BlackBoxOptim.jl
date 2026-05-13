@@ -76,15 +76,30 @@ function check_and_create_search_space(params::Parameters)
                         "NumDimensions = $(params[:NumDimensions]))"))
 end
 
-function check_valid!(params::Parameters)
+function check_valid!(params::Parameters;
+                      user_explicit::Union{AbstractSet{Symbol},Nothing} = nothing)
+    # When the caller did not tell us which keys came from the user (vs. from
+    # `DefaultParameters`), fall back to the legacy behavior of letting MaxTime
+    # silently override the other budget knobs. This keeps third-party callers
+    # (e.g. `update_parameters!` with no extra info) on the old contract.
+    is_explicit(k) = user_explicit === nothing || k in user_explicit
+
     # Check that max_time is larger than zero if it has been specified.
     if haskey(params, :MaxTime)
         if !isa(params[:MaxTime], Number) || params[:MaxTime] < 0.0
             throw(ArgumentError("MaxTime parameter must be a non-negative number"))
         elseif params[:MaxTime] > 0.0
             params[:MaxTime] = convert(Float64, params[:MaxTime])
-            params[:MaxFuncEvals] = 0
-            params[:MaxSteps] = 0
+            # MaxTime historically disabled the iteration / fevals budgets so
+            # the default MaxSteps would not trip first. Preserve that for the
+            # defaults, but if the user *explicitly* set MaxSteps / MaxFuncEvals
+            # alongside MaxTime, honor them — first budget to be hit wins.
+            if !is_explicit(:MaxFuncEvals)
+                params[:MaxFuncEvals] = 0
+            end
+            if !is_explicit(:MaxSteps)
+                params[:MaxSteps] = 0
+            end
         end
     end
 
@@ -97,7 +112,9 @@ function check_valid!(params::Parameters)
                 @warn("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
             end
             params[:MaxFuncEvals] = convert(Int, params[:MaxFuncEvals])
-            params[:MaxSteps] = 0
+            if !is_explicit(:MaxSteps)
+                params[:MaxSteps] = 0
+            end
         end
     end
 

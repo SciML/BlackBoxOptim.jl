@@ -108,8 +108,9 @@ See also [BlackBoxOptim.OptRunController](@ref) for a full list of supported par
 """
 function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
     parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))
+    user_explicit = Set{Symbol}(keys(flatten(parameters)))
     problem, params = setup_problem(functionOrProblem, chain(DefaultParameters, parameters))
-    check_valid!(params)
+    check_valid!(params; user_explicit)
 
     optimizer_func = chain(SingleObjectiveMethods, MultiObjectiveMethods)[params[:Method]]
     optimizer = optimizer_func(problem, params)
