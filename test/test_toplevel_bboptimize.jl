@@ -94,6 +94,30 @@
         #end
     end
 
+    @testset "explicit MaxSteps is honored alongside MaxTime" begin
+        # Regression for SciML/Optimization.jl#1206: when both MaxTime and
+        # MaxSteps are passed, MaxTime used to silently clear MaxSteps so the
+        # iteration cap was ignored.
+        res = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                         MaxTime = 30.0, MaxSteps = 50, TraceMode = :silent)
+        @test parameters(res)[:MaxSteps] == 50
+        @test parameters(res)[:MaxTime] == 30.0
+        @test BlackBoxOptim.iterations(res) <= 60  # 50 + small slack for the step/check loop
+        @test occursin("steps", BlackBoxOptim.stop_reason(res))
+
+        # MaxTime alone still suppresses the default MaxSteps so the run is not
+        # capped at the 10000 default — preserves the original contract.
+        res2 = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                          MaxTime = 0.5, TraceMode = :silent)
+        @test parameters(res2)[:MaxSteps] == 0
+
+        # Same story for MaxFuncEvals: explicit MaxSteps should not be cleared.
+        res3 = bboptimize(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+                          MaxFuncEvals = 100000, MaxSteps = 75, TraceMode = :silent)
+        @test parameters(res3)[:MaxSteps] == 75
+        @test BlackBoxOptim.iterations(res3) <= 85
+    end
+
     @testset "continue running an optimization after it finished" begin
         optctrl = bbsetup(rosenbrock; SearchRange = (-5.0, 5.0), NumDimensions = 100,
             MaxTime = 0.5, TraceMode = :silent)

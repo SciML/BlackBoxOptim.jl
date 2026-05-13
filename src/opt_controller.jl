@@ -433,8 +433,10 @@ function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_DI
 
     # Add new params in front if any are specified and they are valid.
     if length(parameters) > 0
+        user_explicit = Set{Symbol}(keys(parameters))
         oc.parameters = chain(oc.parameters, parameters)
-        check_valid!(oc.parameters) # We must recheck that new param settings are valid
+        # We must recheck that new param settings are valid
+        check_valid!(oc.parameters; user_explicit)
     end
 end
 
