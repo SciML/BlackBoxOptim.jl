@@ -54,6 +54,7 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
 
     last_num_fevals::Int # the number of function evals on the previous step
     num_steps_without_fevals::Int # the number of steps without the function evals
+    num_steps_without_progress::Int # the number of steps without improving best fitness
 
     start_time::Float64 # time optimization started, 0 if not running yet
     stop_time::Float64  # time optimization stopped, 0 if still running
@@ -102,7 +103,7 @@ function OptRunController(optimizer::O, evaluator::E, params) where {O<:Optimize
                       :CallbackFunction, :CallbackInterval,
                       :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
                       :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
-        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "", false)
+        0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "", false)
 end
 
 # stepping optimizer has it's own evaluator, get a reference
@@ -311,6 +312,7 @@ function run!(ctrl::OptRunController)
 
         ctrl.start_time = time()
         ctrl.num_steps = 0
+        ctrl.num_steps_without_progress = 0
         while isempty(ctrl.stop_reason)
             # Report on progress every now and then...
             if (time() - ctrl.last_report_time) > ctrl.trace_interval
@@ -318,6 +320,7 @@ function run!(ctrl::OptRunController)
             end
 
             # Take the step and then update the counters
+            best_fitness_before_step = best_fitness(ctrl)
             nstep_better = step!(ctrl)
             ctrl.num_better += nstep_better
             ctrl.num_better_since_last_report += nstep_better
@@ -329,6 +332,18 @@ function run!(ctrl::OptRunController)
                 ctrl.num_steps_without_fevals = 0
             end
             ctrl.last_num_fevals = num_func_evals(ctrl)
+            fit_scheme = fitness_scheme(ctrl.evaluator.archive)
+            best_fitness_after_step = best_fitness(ctrl)
+            has_progress = if isnafitness(best_fitness_before_step, fit_scheme)
+                !isnafitness(best_fitness_after_step, fit_scheme)
+            else
+                is_better(best_fitness_after_step, best_fitness_before_step, fit_scheme)
+            end
+            if has_progress
+                ctrl.num_steps_without_progress = 0
+            else
+                ctrl.num_steps_without_progress += 1
+            end
 
             # Callback every now and then (if a callback interval has been set)...
             if ctrl.callback_interval >= 0.0

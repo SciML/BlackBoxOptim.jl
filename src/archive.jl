@@ -104,6 +104,11 @@ function delta_fitness(a::TopListArchive)
 end
 
 function check_stop_condition(a::TopListArchive, p::OptimizationProblem, ctrl)
+    if ctrl.max_steps_without_progress > 0 &&
+        ctrl.num_steps_without_progress > ctrl.max_steps_without_progress
+        return "No progress for more than $(ctrl.max_steps_without_progress) iterations"
+    end
+
     if delta_fitness(a) < ctrl.min_delta_fitness_tol
         return "Delta fitness ($(delta_fitness(a))) below tolerance ($(ctrl.min_delta_fitness_tol))"
     end
