@@ -20,12 +20,12 @@ Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 [extensions]
 
 [compat]
-Compat = "3.27, 4"
-Distributions = "0.24, 0.25"
+Compat = "4.18.1"
+Distributions = "0.25.88"
 HTTP = "0.9, 1"
 Requires = "1"
 SpatialIndexing = "0.1.0"
-StatsBase = "0.33, 0.34"
+StatsBase = "0.34.11"
 julia = "1.3.0"
 
 [extras]

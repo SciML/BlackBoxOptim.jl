@@ -13,8 +13,6 @@ on:
 jobs:
   downgrade:
     name: "Downgrade"
-    # Disabled: lower compat bounds (Distributions 0.24, Compat 3.27, etc.) don't resolve on Julia 1.10
-    if: false
     strategy:
       matrix:
         julia-version: ['1.10']
