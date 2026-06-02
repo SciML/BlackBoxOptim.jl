@@ -15,7 +15,7 @@ Modifies `NC` "children" by transferring some information from `NP` "parents".
 
 The concrete implementations must provide `apply!()` method.
 """
-abstract type CrossoverOperator{NP,NC} <: GeneticOperator end
+abstract type CrossoverOperator{NP, NC} <: GeneticOperator end
 
 """
 Embeds(projects) the individual into the search space.
@@ -44,22 +44,24 @@ apply(o::MutationOperator, parents::AbstractVector{<:AbstractVector{<:Real}}) =
 numchildren(o::GeneticOperator) = 1
 numparents(o::MutationOperator) = 1 # But it will apply to each parent separately if given more than one...
 
-numparents(o::CrossoverOperator{NP,NC}) where {NP,NC} = NP::Int
-numchildren(o::CrossoverOperator{NP,NC}) where {NP,NC} = NC::Int
+numparents(o::CrossoverOperator{NP, NC}) where {NP, NC} = NP::Int
+numchildren(o::CrossoverOperator{NP, NC}) where {NP, NC} = NC::Int
 
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
 # wrapper for multi-children variant of apply!() for single-child xover operators
-function apply!(xover::CrossoverOperator{NP, 1},
-                targets::AbstractVector{<:AbstractIndividual}, target_indices::AbstractVector{Int},
-                pop, parentIndices) where NP
+function apply!(
+        xover::CrossoverOperator{NP, 1},
+        targets::AbstractVector{<:AbstractIndividual}, target_indices::AbstractVector{Int},
+        pop, parentIndices
+    ) where {NP}
     length(targets) == length(target_indices) ||
         throw(ArgumentError("The number of target doesn't match the number of their indices"))
     for i in eachindex(target_indices)
         apply!(xover, targets[i], target_indices[i], pop, parentIndices)
     end
-    targets
+    return targets
 end
 
 """
@@ -79,8 +81,10 @@ the fitness change.
 
 The default implementation does nothing.
 """
-function adjust!(op::GeneticOperator, tag::Int, indi_index::Int,
-                 new_fitness::F, old_fitness::F, is_improved::Bool) where F end
+function adjust!(
+        op::GeneticOperator, tag::Int, indi_index::Int,
+        new_fitness::F, old_fitness::F, is_improved::Bool
+    ) where {F} end
 
 """
     trace_state(io, op::GeneticOperator, mode::Symbol)

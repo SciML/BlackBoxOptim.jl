@@ -6,14 +6,18 @@ const FixedOptimum = [3.14, 7.2]
 const FitnessOptimum = fixed_optimum_prob(FixedOptimum)
 
 @testset "set_candidate! for DE population optimizers" begin
-    for m in [:de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited, 
-                :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited]
+    for m in [
+            :de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited,
+            :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited,
+        ]
         PopSize = 10
-        b = bbsetup(fixed_optimum_prob; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
-            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize)
+        b = bbsetup(
+            fixed_optimum_prob; Method = m, MaxFuncEvals = 10 * PopSize, # Give it a chance to be sampled so best fitness is in archive
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize
+        )
         set_candidate!(b.optimizer, FixedOptimum)
         inds = population(b.optimizer).individuals
-        
+
         # There is at least one position in the population that is set to the FixedOptimum:
         @test any(i -> inds[:, i] == FixedOptimum, 1:PopSize)
 
@@ -23,10 +27,14 @@ const FitnessOptimum = fixed_optimum_prob(FixedOptimum)
 end
 
 @testset "set_candidate! for stepping optimizers" begin
-    for m in [:generating_set_search, :resampling_memetic_search, :resampling_inheritance_memetic_search,
-                :simultaneous_perturbation_stochastic_approximation]
-        b = bbsetup(fixed_optimum_prob; Method = m, MaxFuncEvals = 2, 
-            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = 5)
+    for m in [
+            :generating_set_search, :resampling_memetic_search, :resampling_inheritance_memetic_search,
+            :simultaneous_perturbation_stochastic_approximation,
+        ]
+        b = bbsetup(
+            fixed_optimum_prob; Method = m, MaxFuncEvals = 2,
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = 5
+        )
         set_candidate!(b.optimizer, FixedOptimum)
         @test candidate(b.optimizer) == FixedOptimum
 
@@ -41,13 +49,15 @@ end
 
 @testset "set_candidate! for NES optimizers" begin
     for m in [:dxnes, :xnes, :separable_nes]
-        b = bbsetup(fixed_optimum_prob; Method = m, MaxFuncEvals = 100, 
-            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = 5)
+        b = bbsetup(
+            fixed_optimum_prob; Method = m, MaxFuncEvals = 100,
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = 5
+        )
         set_candidate!(b.optimizer, FixedOptimum)
         @test candidate(b.optimizer) == FixedOptimum
 
         res = bboptimize(b; TraceMode = :silent)
-        @test isapprox(best_fitness(res), FitnessOptimum, atol = 1e-1)
+        @test isapprox(best_fitness(res), FitnessOptimum, atol = 1.0e-1)
     end
 end
 
@@ -57,10 +67,12 @@ end
     x0 = 0.5 * ones(3)
 
     PopSize = 10
-    b = bbsetup(fitness_2obj; Method=:borg_moea,
-            FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true),
-            MaxFuncEvals = 10*PopSize, PopulationSize = PopSize,
-            SearchRange=(-10.0, 10.0), NumDimensions=3, ϵ=0.05);
+    b = bbsetup(
+        fitness_2obj; Method = :borg_moea,
+        FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
+        MaxFuncEvals = 10 * PopSize, PopulationSize = PopSize,
+        SearchRange = (-10.0, 10.0), NumDimensions = 3, ϵ = 0.05
+    )
 
     set_candidate!(b.optimizer, x0)
 
@@ -70,19 +82,23 @@ end
 
     # Now ensure we actually get back (sum(abs2, x0), sum(abs2, x0 .- 1.0)) as the best fitness (since it is the best aggregated one).
     res = bboptimize(b; TraceMode = :silent)
-    @test best_fitness(res) == fitness_2obj(x0) 
+    @test best_fitness(res) == fitness_2obj(x0)
 end
 
 @testset "set_candidates! for DE population optimizers" begin
-    for m in [:de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited, 
-                :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited]
+    for m in [
+            :de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited,
+            :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited,
+        ]
         PopSize = 10
-        b = bbsetup(fixed_optimum_prob; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
-            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize)
+        b = bbsetup(
+            fixed_optimum_prob; Method = m, MaxFuncEvals = 10 * PopSize, # Give it a chance to be sampled so best fitness is in archive
+            NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize
+        )
 
         # Get a random population and then add the optimum to ensure it is in there
         randval() = -10.0 + rand() * 20.0
-        initial_population = [[randval(), randval()] for _ in 1:(PopSize-rand(1:2))]
+        initial_population = [[randval(), randval()] for _ in 1:(PopSize - rand(1:2))]
         push!(initial_population, FixedOptimum)
 
         # Now set the population
@@ -96,7 +112,7 @@ end
         for startingpoint in initial_population
             @test any(i -> inds[:, i] == startingpoint, 1:PopSize)
         end
-    
+
         res = bboptimize(b; TraceMode = :silent)
         @test isapprox(best_fitness(res), FitnessOptimum)
     end
@@ -105,33 +121,43 @@ end
 @testset "set_candidate! and set_candidates! when calling bboptimize directly" begin
     PopSize = 10
 
-    for m in [:de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited, 
-        :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited]
-        
+    for m in [
+            :de_rand_1_bin, :de_rand_2_bin, :de_rand_1_bin_radiuslimited, :de_rand_2_bin_radiuslimited,
+            :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited,
+        ]
+
         # Get a random population and then add the optimum to ensure it is in there
         randval() = -10.0 + rand() * 20.0
-        startingpoints = [[randval(), randval()] for _ in 1:(PopSize-rand(1:2))]
+        startingpoints = [[randval(), randval()] for _ in 1:(PopSize - rand(1:2))]
         push!(startingpoints, FixedOptimum)
 
-        res = bboptimize(fixed_optimum_prob, startingpoints; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
+        res = bboptimize(
+            fixed_optimum_prob, startingpoints; Method = m, MaxFuncEvals = 10 * PopSize, # Give it a chance to be sampled so best fitness is in archive
             NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize,
-            TraceMode = :silent)
+            TraceMode = :silent
+        )
         @test isapprox(best_fitness(res), FitnessOptimum)
 
-        res2 = bboptimize(fixed_optimum_prob, FixedOptimum; Method = m, MaxFuncEvals = 10*PopSize, # Give it a chance to be sampled so best fitness is in archive
+        res2 = bboptimize(
+            fixed_optimum_prob, FixedOptimum; Method = m, MaxFuncEvals = 10 * PopSize, # Give it a chance to be sampled so best fitness is in archive
             NumDimensions = 2, SearchRange = (-10.0, 10.0), PopulationSize = PopSize,
-            TraceMode = :silent)
+            TraceMode = :silent
+        )
         @test isapprox(best_fitness(res2), FitnessOptimum)
     end
 end
 
 @testset "error if starting point outside search range" begin
     sp = startingpoint = [-20.0, 0.0]
-    @test_throws ArgumentError bboptimize(fixed_optimum_prob, startingpoint; 
-        SearchRange = (-10.0, 10.0), NumDimensions = 2)
+    @test_throws ArgumentError bboptimize(
+        fixed_optimum_prob, startingpoint;
+        SearchRange = (-10.0, 10.0), NumDimensions = 2
+    )
 
     sp2 = [0.0, 0.0]
     startingpoints = [sp2, sp] # One inside and one outside
-    @test_throws ArgumentError bboptimize(fixed_optimum_prob, startingpoints; 
-            SearchRange = (-10.0, 10.0), NumDimensions = 2)
+    @test_throws ArgumentError bboptimize(
+        fixed_optimum_prob, startingpoints;
+        SearchRange = (-10.0, 10.0), NumDimensions = 2
+    )
 end

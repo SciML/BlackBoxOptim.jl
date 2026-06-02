@@ -4,7 +4,7 @@ using JSON
 
 timestamp(t = time()) = Libc.strftime("%Y-%m-%d %H:%M.%S", t)
 
-wsh = WebSocketHandler() do req,client
+wsh = WebSocketHandler() do req, client
     println("WebSocket opened from $client:\n $req")
 
     # Send meta-info
@@ -16,7 +16,7 @@ wsh = WebSocketHandler() do req,client
 
     # For sending optimization events we do not set the info key. This saves some time
     # in the json conversion on both sides. We reuse one and the same Dict to save on mem.
-    obj = Dict(:ElapsedSeconds => 0, :BestFitness => 1000 + rand()*1000, :NumEvals => 1)
+    obj = Dict(:ElapsedSeconds => 0, :BestFitness => 1000 + rand() * 1000, :NumEvals => 1)
 
     while true
         sleep(0.1 + rand() * 0.3)
@@ -30,7 +30,7 @@ wsh = WebSocketHandler() do req,client
             break
         end
     end
-  end
+end
 
 server = Server(wsh)
-run(server,8082)
+run(server, 8082)

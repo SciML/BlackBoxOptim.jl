@@ -35,16 +35,20 @@ mutable struct Candidate{F} <: FitIndividual{F}
     extra::Any          # extra information
     tag::Int            # additional information set by the genetic operator
 
-    Candidate{F}(params::Individual, index::Int = -1,
-                 fitness::F = NaN,
-                 extra::Any = nothing,
-                 tag::Int = 0) where {F} =
+    Candidate{F}(
+        params::Individual, index::Int = -1,
+        fitness::F = NaN,
+        extra::Any = nothing,
+        tag::Int = 0
+    ) where {F} =
         new(params, index, fitness, extra, tag)
 
-    Candidate(params::Individual, index::Int = -1,
-              fitness::F = NaN,
-              extra::Any = nothing,
-              tag::Int = 0) where {F} =
+    Candidate(
+        params::Individual, index::Int = -1,
+        fitness::F = NaN,
+        extra::Any = nothing,
+        tag::Int = 0
+    ) where {F} =
         new{F}(params, index, fitness, extra, tag)
 end
 
@@ -53,7 +57,7 @@ tag(cand::Candidate) = cand.tag
 
 Base.copy(c::Candidate) = Candidate(copy(c.params), c.index, c.fitness, c.extra, c.tag)
 
-function Base.copy!(c::Candidate{F}, o::Candidate{F}) where F
+function Base.copy!(c::Candidate{F}, o::Candidate{F}) where {F}
     copyto!(c.params, o.params)
     c.index = o.index
     c.fitness = o.fitness # FIXME if vector?

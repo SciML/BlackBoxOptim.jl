@@ -1,18 +1,18 @@
 """
 Create `Evaluator` instance for a given `problem`.
 """
-function make_evaluator(problem::OptimizationProblem, archive=nothing, params::Parameters=ParamsDict())
+function make_evaluator(problem::OptimizationProblem, archive = nothing, params::Parameters = ParamsDict())
     workers = get(params, :Workers, Vector{Int}())
     nthreads = get(params, :NThreads, 0)
-    if archive===nothing
+    if archive === nothing
         # make the default archive
         archiveCapacity = get(params, :ArchiveCapacity, 10)
         archive = TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity)
     end
     if length(workers) > 0
-        return ParallelEvaluator(problem, archive, pids=workers)
+        return ParallelEvaluator(problem, archive, pids = workers)
     elseif nthreads > 0
-        return MultithreadEvaluator(problem, archive, nworkers=nthreads)
+        return MultithreadEvaluator(problem, archive, nworkers = nthreads)
     else
         return ProblemEvaluator(problem, archive)
     end
@@ -24,12 +24,12 @@ Manages problem optimization using the specified method.
 
 See `OptController`.
 """
-mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
+mutable struct OptRunController{O <: Optimizer, E <: Evaluator}
     optimizer::O   # optimization algorithm
     evaluator::E   # problem evaluator
 
     trace_mode::Symbol # controller state trace mode (:verbose, :compact, :silent)
-                       # :silent makes tr() generate no output)
+    # :silent makes tr() generate no output)
     save_trace::Bool # FIXME if traces should be saved to a file
     trace_interval::Float64 # periodicity of calling trace_progress()
 
@@ -42,7 +42,7 @@ mutable struct OptRunController{O<:Optimizer, E<:Evaluator}
     max_steps_without_fevals::Int # stop optimization if no func evals in this many steps (indicates a converged/degenerate search)
     max_steps_without_progress::Int # stop optimization if no improvement in this many steps (indicates a converged/degenerate search)
     max_time::Float64   # maximal time, 0 to ignore
-    
+
     min_delta_fitness_tol::Float64 # minimal difference between current best fitness and second-best one
     fitness_tol::Float64  # minimal difference between current best fitness and the known optmimum
 
@@ -96,13 +96,19 @@ Create `OptRunController` for a given problem using specified `optimizer`.
       should be save to a csv file
     * `:SaveParameters` save method/controller parameters to a JSON file
 """
-function OptRunController(optimizer::O, evaluator::E, params) where {O<:Optimizer, E<:Evaluator}
-    OptRunController{O,E}(optimizer, evaluator,
-        [params[key] for key in Symbol[:TraceMode, :SaveTrace, :TraceInterval,
-                      :CallbackFunction, :CallbackInterval,
-                      :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
-                      :MinDeltaFitnessTolerance, :FitnessTolerance]]...,
-        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "", false)
+function OptRunController(optimizer::O, evaluator::E, params) where {O <: Optimizer, E <: Evaluator}
+    return OptRunController{O, E}(
+        optimizer, evaluator,
+        [
+            params[key] for key in Symbol[
+                    :TraceMode, :SaveTrace, :TraceInterval,
+                    :CallbackFunction, :CallbackInterval,
+                    :MaxSteps, :MaxFuncEvals, :MaxNumStepsWithoutFuncEvals, :MaxStepsWithoutProgress, :MaxTime,
+                    :MinDeltaFitnessTolerance, :FitnessTolerance,
+                ]
+        ]...,
+        0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, -1.0, "", false
+    )
 end
 
 # stepping optimizer has it's own evaluator, get a reference
@@ -127,7 +133,7 @@ function trace(ctrl::OptRunController, msg::AbstractString, obj = nothing)
             end
         end
     end
-    if ctrl.save_trace
+    return if ctrl.save_trace
         # No saving for now
     end
 end
@@ -145,7 +151,7 @@ stop_reason(ctrl::OptRunController) = ctrl.stop_reason
 start_time(ctrl::OptRunController) = ctrl.start_time
 
 best_candidate(ctrl::OptRunController) = best_candidate(ctrl.evaluator.archive)
-best_fitness(ctrl::OptRunController) =  best_fitness(ctrl.evaluator.archive)
+best_fitness(ctrl::OptRunController) = best_fitness(ctrl.evaluator.archive)
 
 """
     show_fitness(io, fit, [problem::OptimizationProblem])
@@ -156,7 +162,7 @@ to print the names of each objective.
 """
 show_fitness(io::IO, fit::Number) = @printf(io, "%.9f", fit)
 
-function show_fitness(io::IO, fit::NTuple{N}) where N
+function show_fitness(io::IO, fit::NTuple{N}) where {N}
     print(io, "(")
     for i in 1:N
         if i > 1
@@ -164,12 +170,12 @@ function show_fitness(io::IO, fit::NTuple{N}) where N
         end
         @printf(io, "%.5f", fit[i])
     end
-    print(io, ")")
+    return print(io, ")")
 end
 
-function show_fitness(io::IO, fit::IndexedTupleFitness{N}) where N
+function show_fitness(io::IO, fit::IndexedTupleFitness{N}) where {N}
     show_fitness(io, fit.orig)
-    @printf(io, " agg=%.5f", fit.agg)
+    return @printf(io, " agg=%.5f", fit.agg)
 end
 
 # problem-specific method defaults to problem-agnostic method
@@ -196,7 +202,7 @@ function format_fitness(fit::Any)
 end
 
 function elapsed_time(ctrl::OptRunController)
-    isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
+    return isrunning(ctrl) ? time() - ctrl.start_time : ctrl.stop_time - ctrl.start_time
 end
 
 function check_stop_condition(ctrl::OptRunController)
@@ -226,7 +232,7 @@ function check_stop_condition(ctrl::OptRunController)
 end
 
 @inline function callback(ctrl::OptRunController)
-    if ctrl.callback_interval >= 0.0
+    return if ctrl.callback_interval >= 0.0
         ctrl.callback_function(ctrl)
         ctrl.last_callback_time = time()
     end
@@ -235,8 +241,8 @@ end
 function trace_progress(ctrl::OptRunController)
     # update the counters
     ctrl.last_report_time = time()
-    total_improvement_rate = ctrl.num_better/num_steps(ctrl)
-    recent_improvement_rate = ctrl.num_better_since_last_report/ctrl.num_steps_since_last_report
+    total_improvement_rate = ctrl.num_better / num_steps(ctrl)
+    recent_improvement_rate = ctrl.num_better_since_last_report / ctrl.num_steps_since_last_report
     ctrl.num_better_since_last_report = 0
     ctrl.num_steps_since_last_report = 0
 
@@ -245,14 +251,22 @@ function trace_progress(ctrl::OptRunController)
     end
 
     # Always print step number, num fevals and elapsed time
-    trace(ctrl, @sprintf("%.2f secs, %d evals, %d steps",
-            elapsed_time(ctrl), num_func_evals(ctrl), num_steps(ctrl)))
+    trace(
+        ctrl, @sprintf(
+            "%.2f secs, %d evals, %d steps",
+            elapsed_time(ctrl), num_func_evals(ctrl), num_steps(ctrl)
+        )
+    )
 
     # Only print if this optimizer reports on number of better. They return 0
     # if they do not.
     if total_improvement_rate > 0.0
-        trace(ctrl, @sprintf(", improv/step: %.3f (last = %.4f)",
-                total_improvement_rate, recent_improvement_rate))
+        trace(
+            ctrl, @sprintf(
+                ", improv/step: %.3f (last = %.4f)",
+                total_improvement_rate, recent_improvement_rate
+            )
+        )
     end
 
     # Always print fitness if num_evals > 0
@@ -263,7 +277,7 @@ function trace_progress(ctrl::OptRunController)
 
     trace(ctrl, "\n")
 
-    trace_state(stdout, ctrl.optimizer, ctrl.trace_mode)
+    return trace_state(stdout, ctrl.optimizer, ctrl.trace_mode)
 end
 
 function step!(ctrl::OptRunController{<:AskTellOptimizer})
@@ -290,13 +304,13 @@ shutdown!(ctrl::OptRunController) = ctrl.shutdown = true
 
 function shutdown_optimizer!(ctrl::OptRunController{<:SteppingOptimizer})
     shutdown!(ctrl.optimizer)
-    shutdown!(ctrl)
+    return shutdown!(ctrl)
 end
 
 function shutdown_optimizer!(ctrl::OptRunController{<:AskTellOptimizer})
     shutdown!(ctrl.optimizer)
     shutdown!(ctrl.evaluator)
-    shutdown!(ctrl)
+    return shutdown!(ctrl)
 end
 
 """
@@ -332,8 +346,10 @@ function run!(ctrl::OptRunController)
 
             # Callback every now and then (if a callback interval has been set)...
             if ctrl.callback_interval >= 0.0
-                if ctrl.callback_interval == 0.0 || (ctrl.last_callback_time <= 0.0 ||
-                        (time() - ctrl.last_callback_time) > ctrl.callback_interval)
+                if ctrl.callback_interval == 0.0 || (
+                        ctrl.last_callback_time <= 0.0 ||
+                            (time() - ctrl.last_callback_time) > ctrl.callback_interval
+                    )
                     callback(ctrl)
                 end
             end
@@ -350,23 +366,23 @@ function run!(ctrl::OptRunController)
     return ctrl.stop_reason
 end
 
-function show_report(ctrl::OptRunController, population_stats=false)
+function show_report(ctrl::OptRunController, population_stats = false)
     final_elapsed_time = elapsed_time(ctrl)
     trace(ctrl, "Termination reason: $(ctrl.stop_reason)\n")
-    trace(ctrl, @sprintf "Steps per second = %.2f\n" num_steps(ctrl)/final_elapsed_time)
-    trace(ctrl, @sprintf "Function evals per second = %.2f\n" num_func_evals(ctrl)/final_elapsed_time)
-    trace(ctrl, @sprintf "Improvements/step = %.5f\n" ctrl.num_better/ctrl.max_steps)
+    trace(ctrl, @sprintf "Steps per second = %.2f\n" num_steps(ctrl) / final_elapsed_time)
+    trace(ctrl, @sprintf "Function evals per second = %.2f\n" num_func_evals(ctrl) / final_elapsed_time)
+    trace(ctrl, @sprintf "Improvements/step = %.5f\n" ctrl.num_better / ctrl.max_steps)
     trace(ctrl, "Total function evaluations = $(num_func_evals(ctrl))\n")
 
     if population_stats && isa(ctrl.optimizer, PopulationOptimizer)
-        trace(ctrl, "\nMean value (in population) per position:",  mean(population(ctrl.optimizer),1))
-        trace(ctrl, "\n\nStd dev (in population) per position:", std(population(ctrl.optimizer),1))
+        trace(ctrl, "\nMean value (in population) per position:", mean(population(ctrl.optimizer), 1))
+        trace(ctrl, "\n\nStd dev (in population) per position:", std(population(ctrl.optimizer), 1))
     end
 
     trace(ctrl, "\n\nBest candidate found: ", best_candidate(ctrl))
     trace(ctrl, "\n\nFitness: ")
     show_fitness(stdout, best_fitness(ctrl), problem(ctrl))
-    trace(ctrl, "\n\n")
+    return trace(ctrl, "\n\n")
 end
 
 function write_result(ctrl::OptRunController, filename = "")
@@ -375,10 +391,12 @@ function write_result(ctrl::OptRunController, filename = "")
         filename = "$(timestamp)_$(problem_summary(ctrl.evaluator))_$(name(ctrl.optimizer)).csv"
         filename = replace(replace(filename, r"\s+" => "_"), r"/" => "_")
     end
-    save_fitness_history_to_csv_file(ctrl.evaluator.archive, filename;
-            header_prefix = "Problem,Dimension,Optimizer",
-            line_prefix = "$(name(problem(ctrl.evaluator))),$(numdims(ctrl.evaluator)),$(name(ctrl.optimizer))",
-            bestfitness = opt_value(problem(ctrl.evaluator)))
+    return save_fitness_history_to_csv_file(
+        ctrl.evaluator.archive, filename;
+        header_prefix = "Problem,Dimension,Optimizer",
+        line_prefix = "$(name(problem(ctrl.evaluator))),$(numdims(ctrl.evaluator)),$(name(ctrl.optimizer))",
+        bestfitness = opt_value(problem(ctrl.evaluator))
+    )
 end
 
 """
@@ -390,7 +408,7 @@ Supports restarts and modifying parameter of the method between runs.
 
 See `OptRunController`.
 """
-mutable struct OptController{O<:Optimizer, P<:OptimizationProblem}
+mutable struct OptController{O <: Optimizer, P <: OptimizationProblem}
     optimizer::O   # optimization algorithm
     problem::P     # opt problem
     parameters::ParamsDictChain
@@ -406,7 +424,8 @@ Create `OptController` for a given `optimizer` and a `problem`.
 """
 OptController(
     optimizer::O, problem::P,
-    params::ParamsDictChain) where {O<:Optimizer, P<:OptimizationProblem} =
+    params::ParamsDictChain
+) where {O <: Optimizer, P <: OptimizationProblem} =
     OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
 
 optimizer(oc::OptController) = oc.optimizer
@@ -432,7 +451,7 @@ function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_DI
     end
 
     # Add new params in front if any are specified and they are valid.
-    if length(parameters) > 0
+    return if length(parameters) > 0
         user_explicit = Set{Symbol}(keys(parameters))
         oc.parameters = chain(oc.parameters, parameters)
         # We must recheck that new param settings are valid
@@ -441,7 +460,7 @@ function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_DI
 end
 
 function init_rng!(parameters::Parameters)
-    if haskey(parameters, :RandomizeRngSeed)
+    return if haskey(parameters, :RandomizeRngSeed)
         warn("Parameter RandomizeRngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim.")
     elseif haskey(parameters, :RngSeed)
         warn("Parameter RngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim.")

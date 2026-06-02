@@ -35,7 +35,7 @@ mutable struct OptimizationResults
     method_output::MethodOutput   # method-specific output
 
     function OptimizationResults(ctrl, oc)
-        new(
+        return new(
             string(oc.parameters[:Method]),
             stop_reason(ctrl),
             num_steps(ctrl),
@@ -44,7 +44,8 @@ mutable struct OptimizationResults
             num_func_evals(ctrl),
             fitness_scheme(evaluator(ctrl).archive),
             ArchiveOutput(evaluator(ctrl).archive),
-            MethodOutput(ctrl.optimizer))
+            MethodOutput(ctrl.optimizer)
+        )
     end
 end
 
@@ -86,12 +87,12 @@ isinterrupted(or::OptimizationResults) = stop_reason(or) == "InterruptException(
 """
 `TopListArchive`-specific components of the optimization results.
 """
-struct TopListArchiveOutput{F,C} <: ArchiveOutput
+struct TopListArchiveOutput{F, C} <: ArchiveOutput
     best_fitness::F
     best_candidate::C
 
-    TopListArchiveOutput(archive::TopListArchive{F}) where F =
-        new{F,Individual}(best_fitness(archive), best_candidate(archive))
+    TopListArchiveOutput(archive::TopListArchive{F}) where {F} =
+        new{F, Individual}(best_fitness(archive), best_candidate(archive))
 end
 
 ArchiveOutput(archive::TopListArchive) = TopListArchiveOutput(archive)
@@ -99,13 +100,14 @@ ArchiveOutput(archive::TopListArchive) = TopListArchiveOutput(archive)
 """
 Wrapper for `FrontierIndividual` that allows easy access to the problem fitness.
 """
-struct FrontierIndividualWrapper{F,FA} <: FitIndividual{F}
+struct FrontierIndividualWrapper{F, FA} <: FitIndividual{F}
     inner::FrontierIndividual{FA}
     fitness::F
 
-    FrontierIndividualWrapper{F,FA}(
-            indi::FrontierIndividual{FA},
-            fit_scheme::FitnessScheme{FA}) where {F, FA} =
+    FrontierIndividualWrapper{F, FA}(
+        indi::FrontierIndividual{FA},
+        fit_scheme::FitnessScheme{FA}
+    ) where {F, FA} =
         new{F, FA}(indi, convert(F, fitness(indi), fit_scheme))
 end
 
@@ -115,19 +117,21 @@ archived_fitness(indi::FrontierIndividualWrapper) = fitness(indi.inner)
 """
 `EpsBoxArchive`-specific components of the optimization results.
 """
-struct EpsBoxArchiveOutput{N,F,FS<:EpsBoxDominanceFitnessScheme} <: ArchiveOutput
-    best_fitness::NTuple{N,F}
+struct EpsBoxArchiveOutput{N, F, FS <: EpsBoxDominanceFitnessScheme} <: ArchiveOutput
+    best_fitness::NTuple{N, F}
     best_candidate::Individual
-    frontier::Vector{FrontierIndividualWrapper{NTuple{N,F},IndexedTupleFitness{N,F}}} # inferred Pareto frontier
+    frontier::Vector{FrontierIndividualWrapper{NTuple{N, F}, IndexedTupleFitness{N, F}}} # inferred Pareto frontier
     fit_scheme::FS
 
-    function EpsBoxArchiveOutput(archive::EpsBoxArchive{N,F}) where {N,F}
+    function EpsBoxArchiveOutput(archive::EpsBoxArchive{N, F}) where {N, F}
         fit_scheme = fitness_scheme(archive)
-        FIW = FrontierIndividualWrapper{NTuple{N,F}, IndexedTupleFitness{N,F}}
-        new{N,F,typeof(fit_scheme)}(convert(NTuple{N,F}, best_fitness(archive), fit_scheme),
-                                    best_candidate(archive),
-                                    FIW[FIW(frontel, fit_scheme) for frontel in pareto_frontier(archive)],
-                                    fit_scheme)
+        FIW = FrontierIndividualWrapper{NTuple{N, F}, IndexedTupleFitness{N, F}}
+        return new{N, F, typeof(fit_scheme)}(
+            convert(NTuple{N, F}, best_fitness(archive), fit_scheme),
+            best_candidate(archive),
+            FIW[FIW(frontel, fit_scheme) for frontel in pareto_frontier(archive)],
+            fit_scheme
+        )
     end
 end
 
@@ -143,7 +147,7 @@ struct PopulationOptimizerOutput{P} <: MethodOutput
     population::P
 
     # FIXME PO is only required so that julia doesn't think it's an old inner ctor syntax
-    PopulationOptimizerOutput(method::PO) where {PO<:PopulationOptimizer} =
+    PopulationOptimizerOutput(method::PO) where {PO <: PopulationOptimizer} =
         new{typeof(population(method))}(population(method))
 end
 

@@ -3,8 +3,10 @@
 
     for m in keys(BlackBoxOptim.SingleObjectiveMethods)
         @testset "$(m)" begin
-            ctrl = bbsetup(rosenbrock2d; Method = m,
-                SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent)
+            ctrl = bbsetup(
+                rosenbrock2d; Method = m,
+                SearchRange = [(-5.0, 5.0), (-2.0, 2.0)], TraceMode = :silent
+            )
             # run first iteration before the main run to exclude compilation from timing
             bboptimize(ctrl, MaxSteps = 1)
             res = bboptimize(ctrl, MaxTime = 0.3)
@@ -21,17 +23,19 @@ end
 
     for m in keys(BlackBoxOptim.MultiObjectiveMethods)
         @testset "$(m)" begin
-            ctrl = bbsetup(schaffer1; Method = m,
+            ctrl = bbsetup(
+                schaffer1; Method = m,
                 SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,
-                FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.01)
+                FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true), ϵ = 0.01
+            )
             # run first iteration before the main run to exclude compilation from timing
             bboptimize(ctrl, MaxSteps = 1)
             res = bboptimize(ctrl, MaxTime = 3.0)
             @test length(best_candidate(res)) == 2
             f = best_fitness(res)
-            @test typeof(f) == NTuple{2,Float64}
-            @test isapprox(f[1], 2.0; atol=8E-2)
-            @test isapprox(f[2], 2.0; atol=8E-2)
+            @test typeof(f) == NTuple{2, Float64}
+            @test isapprox(f[1], 2.0; atol = 8.0e-2)
+            @test isapprox(f[2], 2.0; atol = 8.0e-2)
         end
     end
 end

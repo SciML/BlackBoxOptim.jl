@@ -5,86 +5,86 @@ using SpatialIndexing
 using Printf: @printf, @sprintf
 using Compat: String, view
 
-export  Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
-        bboptimize, bbsetup, compare_optimizers,
+export Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
+    bboptimize, bbsetup, compare_optimizers,
 
-        DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
-        adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
+    DiffEvoOpt, de_rand_1_bin, de_rand_1_bin_radiuslimited,
+    adaptive_de_rand_1_bin, adaptive_de_rand_1_bin_radiuslimited,
 
-        SeparableNESOpt, separable_nes,
-        XNESOpt, xnes, dxnes,
+    SeparableNESOpt, separable_nes,
+    XNESOpt, xnes, dxnes,
 
-        # Parameters
-        DictChain, Parameters, ParamsDictChain, ParamsDict,
-        chain, flatten,
+    # Parameters
+    DictChain, Parameters, ParamsDictChain, ParamsDict,
+    chain, flatten,
 
-        # Fitness
-        FitnessScheme,
-        ScalarFitnessScheme, ComplexFitnessScheme,
-        MinimizingFitnessScheme, MaximizingFitnessScheme,
-        IndexedTupleFitness, TupleFitnessScheme, ParetoFitnessScheme,
-        EpsDominanceFitnessScheme, EpsBoxDominanceFitnessScheme,
-        fitness_type, fitness_eltype, numobjectives,
-        is_minimizing, nafitness, isnafitness,
-        hat_compare, is_better, is_worse, same_fitness,
-        aggregate,
+    # Fitness
+    FitnessScheme,
+    ScalarFitnessScheme, ComplexFitnessScheme,
+    MinimizingFitnessScheme, MaximizingFitnessScheme,
+    IndexedTupleFitness, TupleFitnessScheme, ParetoFitnessScheme,
+    EpsDominanceFitnessScheme, EpsBoxDominanceFitnessScheme,
+    fitness_type, fitness_eltype, numobjectives,
+    is_minimizing, nafitness, isnafitness,
+    hat_compare, is_better, is_worse, same_fitness,
+    aggregate,
 
-        # Evaluator
-        #ProblemEvaluator,
-        AbstractAsyncEvaluator, AbstractFitnessEvaluationJob,
-        update_fitness!, async_update_fitness!, sync_update_fitness,
+    # Evaluator
+    #ProblemEvaluator,
+    AbstractAsyncEvaluator, AbstractFitnessEvaluationJob,
+    update_fitness!, async_update_fitness!, sync_update_fitness,
 
-        # Problems
-        Problems,
-        OptimizationProblem, FunctionBasedProblem,
-        minimization_problem,
-        name, fitness_scheme_type, fitness_scheme, search_space, numdims, opt_value,
-        fitness_is_within_ftol, objfunc, fitness,
+    # Problems
+    Problems,
+    OptimizationProblem, FunctionBasedProblem,
+    minimization_problem,
+    name, fitness_scheme_type, fitness_scheme, search_space, numdims, opt_value,
+    fitness_is_within_ftol, objfunc, fitness,
 
-        # Problem factory/family
-        FunctionBasedProblemFamily, MinimizationProblemFamily,
-        fixed_dim_problem, instantiate,
+    # Problem factory/family
+    FunctionBasedProblemFamily, MinimizationProblemFamily,
+    fixed_dim_problem, instantiate,
 
-        save_fitness_history_to_csv_file,
+    save_fitness_history_to_csv_file,
 
-        # Archive
-        TopListArchive, EpsBoxArchive,
-        best_fitness, best_candidate,
-        last_top_fitness, delta_fitness, capacity,
-        width_of_confidence_interval, fitness_improvement_potential,
+    # Archive
+    TopListArchive, EpsBoxArchive,
+    best_fitness, best_candidate,
+    last_top_fitness, delta_fitness, capacity,
+    width_of_confidence_interval, fitness_improvement_potential,
 
-        # OptimizationResults
-        minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
-        archived_fitness,
+    # OptimizationResults
+    minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
+    archived_fitness,
 
-        # OptController
-        numruns, lastrun, problem,
+    # OptController
+    numruns, lastrun, problem,
 
-        # Search spaces
-        ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace,
-        RectSearchSpace, ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace,
-        numdims, dimmin, dimmax, dimdelta, dimrange, dimdigits,
-        rand_individual, rand_individuals,
+    # Search spaces
+    ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace,
+    RectSearchSpace, ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace,
+    numdims, dimmin, dimmax, dimdelta, dimrange, dimdigits,
+    rand_individual, rand_individuals,
 
-        # Population
-        FitPopulation,
-        popsize,
+    # Population
+    FitPopulation,
+    popsize,
 
-        # Genetic operators
-        GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
-        NoMutation, MutationClock, GibbsMutationOperator, UniformMutation,
-        PolynomialMutation,
-        FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
-        RandomBound,
-        SimpleSelector, RadiusLimitedSelector,
-        SimulatedBinaryCrossover, SimplexCrossover, UnimodalNormalDistributionCrossover,
-        ParentCentricCrossover,
+    # Genetic operators
+    GeneticOperator, MutationOperator, CrossoverOperator, EmbeddingOperator,
+    NoMutation, MutationClock, GibbsMutationOperator, UniformMutation,
+    PolynomialMutation,
+    FixedGeneticOperatorsMixture, FAGeneticOperatorsMixture,
+    RandomBound,
+    SimpleSelector, RadiusLimitedSelector,
+    SimulatedBinaryCrossover, SimplexCrossover, UnimodalNormalDistributionCrossover,
+    ParentCentricCrossover,
 
-        numparents, numchildren, apply!, adjust!,
+    numparents, numchildren, apply!, adjust!,
 
-        # Utilities
-        FrequencyAdapter, update!, frequencies,
-        name
+    # Utilities
+    FrequencyAdapter, update!, frequencies,
+    name
 
 if !isdefined(Base, :get_extension)
     using Requires

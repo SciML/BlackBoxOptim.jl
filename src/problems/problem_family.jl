@@ -5,13 +5,13 @@ It is an abstraction for problem parameterization (e.g by the
 number of the search space dimensions) that allows
 to instantiate `OptimizationProblem` for the concrete parameters.
 """
-abstract type ProblemFamily{FS<:FitnessScheme} end
+abstract type ProblemFamily{FS <: FitnessScheme} end
 
 """
 Family of `FunctionBasedProblem` optimization problems
 parameterized by the number of search space dimensions.
 """
-struct FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
+struct FunctionBasedProblemFamily{F, FS <: FitnessScheme, FO} <: ProblemFamily{FS}
     objfunc::Function               # Objective function
     name::String
     fitness_scheme::FS
@@ -23,13 +23,15 @@ struct FunctionBasedProblemFamily{F,FS<:FitnessScheme,FO} <: ProblemFamily{FS}
             objfunc::Function, name::String,
             fitness_scheme::FS, range::ParamBounds, opt_value::FO = nothing,
             reserved_ss::RectSearchSpace = ZERO_SEARCH_SPACE
-    ) where {FS<:FitnessScheme, FO}
+        ) where {FS <: FitnessScheme, FO}
         if FO <: Number
             fitness_type(fitness_scheme) == FO ||
                 throw(ArgumentError("Fitness type ($(fitness_type(fitness_scheme))) and opt_value type ($(FO)) do not match"))
         end
-        new{FO, FS, FO}(objfunc, name, fitness_scheme,
-                        reserved_ss, range, opt_value)
+        return new{FO, FS, FO}(
+            objfunc, name, fitness_scheme,
+            reserved_ss, range, opt_value
+        )
     end
 end
 
@@ -43,7 +45,7 @@ Construct search space for `FunctionBasedProblem` with the given number of dimen
 function instantiate_search_space(family::FunctionBasedProblemFamily, ndim::Int)
     ndim >= numdims(family.reserved_ss) ||
         throw(ArgumentError("Cannot create $ndim-problem: number of dimensions less than reserved dimensions"))
-    vcat(family.reserved_ss, RectSearchSpace(ndim - numdims(family.reserved_ss), family.range_per_dim))
+    return vcat(family.reserved_ss, RectSearchSpace(ndim - numdims(family.reserved_ss), family.range_per_dim))
 end
 
 """
@@ -52,8 +54,10 @@ end
 Construct `FunctionBasedProblem` with the given number of dimensions.
 """
 instantiate(family::FunctionBasedProblemFamily, ndim::Int) =
-    FunctionBasedProblem(family.objfunc, family.name, family.fitness_scheme,
-                         instantiate_search_space(family, ndim), family.opt_value)
+    FunctionBasedProblem(
+    family.objfunc, family.name, family.fitness_scheme,
+    instantiate_search_space(family, ndim), family.opt_value
+)
 
 function instantiate(prob::OptimizationProblem, ndim::Int)
     numdims(prob) == ndim ||

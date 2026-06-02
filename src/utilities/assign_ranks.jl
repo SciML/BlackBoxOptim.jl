@@ -2,7 +2,7 @@
 Assign ranks to the values but keeps the rank the same if the values are within
 tolerance of each other.
 """
-function assign_ranks_within_tolerance(values; by = (x) -> x, tolerance = 1e-5, rev = false)
+function assign_ranks_within_tolerance(values; by = (x) -> x, tolerance = 1.0e-5, rev = false)
     perm = sortperm(values, by = by, rev = rev)
     ranked = Any[]
     rank = 1

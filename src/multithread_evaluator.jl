@@ -73,7 +73,7 @@ end
 Fitness evaluator that asynchronously distributes calculation
 among several worker threads.
 """
-mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archive} <: AbstractAsyncEvaluator{P}
+mutable struct MultithreadEvaluator{F, FA, FS, P <: OptimizationProblem, A <: Archive} <: AbstractAsyncEvaluator{P}
     problem::P          # optimization problem
     archive::A          # archive where good candidates are automatically stored
     num_evals::Int      # fitness evaluations counter
@@ -96,9 +96,9 @@ mutable struct MultithreadEvaluator{F, FA, FS, P<:OptimizationProblem, A<:Archiv
     results_pool::Vector{Vector{Candidate{FA}}}
 
     function MultithreadEvaluator(
-        problem::P, archive::A;
-        nworkers::Integer = Threads.nthreads() - 1
-    ) where {P<:OptimizationProblem, A<:Archive}
+            problem::P, archive::A;
+            nworkers::Integer = Threads.nthreads() - 1
+        ) where {P <: OptimizationProblem, A <: Archive}
         nworkers > 0 || throw(ArgumentError("nworkers must be positive"))
         nworkers < Threads.nthreads() ||
             throw(ArgumentError("nworkers must be less than threads count ($(Threads.nthreads()))"))
@@ -127,16 +127,19 @@ end
 MultithreadEvaluator(
     problem::OptimizationProblem;
     nworkers::Integer = Threads.nthreads() - 1,
-    archiveCapacity::Integer = 10) =
-    MultithreadEvaluator(problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
-                         nworkers=nworkers)
+    archiveCapacity::Integer = 10
+) =
+    MultithreadEvaluator(
+    problem, TopListArchive(fitness_scheme(problem), numdims(problem), archiveCapacity),
+    nworkers = nworkers
+)
 
 num_evals(eval::MultithreadEvaluator) = eval.num_evals
 
 # FIXME move these method to abstract Evaluator (it would need to support A and FA)
-archfitness_type(::Type{<:MultithreadEvaluator{F,FA}}) where {F, FA} = FA
+archfitness_type(::Type{<:MultithreadEvaluator{F, FA}}) where {F, FA} = FA
 archfitness_type(eval::MultithreadEvaluator) = archfitness_type(typeof(eval))
-candidate_type(::Type{T}) where T<:MultithreadEvaluator = Candidate{archfitness_type(T)}
+candidate_type(::Type{T}) where {T <: MultithreadEvaluator} = Candidate{archfitness_type(T)}
 candidate_type(eval::MultithreadEvaluator) = candidate_type(typeof(eval))
 
 nworkers(eval::MultithreadEvaluator) = length(eval.workers)
@@ -144,29 +147,31 @@ nworkers(eval::MultithreadEvaluator) = length(eval.workers)
 is_stopping(eval::MultithreadEvaluator) = eval.is_stopping
 
 # what the worker thread should do while waiting for a lock/condition
-pause(worker::MTEvaluatorWorker; longer::Bool=false) =
+pause(worker::MTEvaluatorWorker; longer::Bool = false) =
     longer ? yield() : ccall(:jl_cpu_pause, Cvoid, ())
 
 # what the master evaluator thread should do while waiting for a lock/condition
-pause(eval::MultithreadEvaluator; longer::Bool=false) =
+pause(eval::MultithreadEvaluator; longer::Bool = false) =
     longer ? yield() : ccall(:jl_cpu_pause, Cvoid, ());
 
 # Locks SpinLock in a "smart" way: allows yielding to other task from time to
 # time, cancels waiting for a lock if the evaluator is being shut down.
 # Returns true if the lock was acquired
-function smartlock(spinlock::Threads.SpinLock, eval::MultithreadEvaluator,
-                   worker::Union{MTEvaluatorWorker, Nothing} = nothing;
-                   adaptive::Bool=true)
+function smartlock(
+        spinlock::Threads.SpinLock, eval::MultithreadEvaluator,
+        worker::Union{MTEvaluatorWorker, Nothing} = nothing;
+        adaptive::Bool = true
+    )
     locked = false
     threadowner = isnothing(worker) ? eval : worker
     if adaptive
         i = 0
         while !is_stopping(eval) && !(locked = trylock(spinlock))
-            pause(threadowner, longer=((i += 1) & 0xFFFF) == 0)
+            pause(threadowner, longer = ((i += 1) & 0xFFFF) == 0)
         end
     else
         while !is_stopping(eval) && !(locked = trylock(spinlock))
-            pause(threadowner, longer=false)
+            pause(threadowner, longer = false)
         end
     end
     return locked
@@ -179,13 +184,16 @@ function MTFitnessEvalJob(eval::MultithreadEvaluator, candidates::Any, nafitness
     isnothing(next_candidate) && return nothing
 
     if smartlock(eval.resources_lock, eval)
-        res = MTFitnessEvalJob{archfitness_type(eval), typeof(nafitness),
-                               typeof(candidates), typeof(last(next_candidate))}(
+        res = MTFitnessEvalJob{
+            archfitness_type(eval), typeof(nafitness),
+            typeof(candidates), typeof(last(next_candidate)),
+        }(
             candidates, next_candidate, nafitness,
             isempty(eval.atomics_pool) ? Threads.Atomic{Int}(0) : pop!(eval.atomics_pool),
             isempty(eval.locks_pool) ? Threads.SpinLock() : pop!(eval.locks_pool),
             isempty(eval.results_pool) ? eltype(eval.results_pool)() : pop!(eval.results_pool),
-            false)
+            false
+        )
         unlock(eval.resources_lock)
         return res
     else
@@ -196,11 +204,13 @@ end
 # create MTEvaluatorWorker and assign it to a given tread
 # HACK (ab)use julia internals to make sure that workers are spawned on different threads
 # HACK "inspired" by enq_work() (base/task.jl) and Channel ctor (base/channels.jl)
-function MTEvaluatorWorker(eval::MultithreadEvaluator, workerix::Integer, tid::Integer,
-                           readysteadygo::Threads.Atomic{Int})
+function MTEvaluatorWorker(
+        eval::MultithreadEvaluator, workerix::Integer, tid::Integer,
+        readysteadygo::Threads.Atomic{Int}
+    )
     task = Task(() -> run_mteval_worker(eval, workerix, readysteadygo))
     task.sticky = true
-    ccall(:jl_set_task_tid, Cvoid, (Any, Cint), task, tid-1)
+    ccall(:jl_set_task_tid, Cvoid, (Any, Cint), task, tid - 1)
     push!(Base.Workqueues[tid], task)
     ccall(:jl_wakeup_thread, Cvoid, (Int16,), (tid - 1) % Int16)
     return MTEvaluatorWorker(task)
@@ -210,12 +220,14 @@ end
 function create_workers!(eval::MultithreadEvaluator, nworkers::Integer)
     @debug "Initializing $nworkers multithread workers..."
     readysteadygo = Threads.Atomic{Int}(-nworkers)
-    eval.workers = [MTEvaluatorWorker(eval, i, i >= Threads.threadid() ? i+1 : i, readysteadygo)
-                    for i in 1:nworkers]
+    eval.workers = [
+        MTEvaluatorWorker(eval, i, i >= Threads.threadid() ? i + 1 : i, readysteadygo)
+            for i in 1:nworkers
+    ]
     @debug "Waiting for workers initialization..."
     while !any(w -> istaskfailed(w.task) || istaskdone(w.task), eval.workers) &&
-        (readysteadygo[] < 0)
-        pause(eval, longer=true)
+            (readysteadygo[] < 0)
+        pause(eval, longer = true)
     end
     if !all(isactive, eval.workers) || readysteadygo[] < 0
         @info "MultithreadEvaluator: workers initialization failed, shutting down"
@@ -231,10 +243,10 @@ end
 # The workers look and pick up the first job in the jobs_queue and send it
 # to calculate_fitness()
 function run_mteval_worker(
-    eval::MultithreadEvaluator,
-    workerix::Int,
-    readysteadygo::Threads.Atomic{Int}
-)
+        eval::MultithreadEvaluator,
+        workerix::Int,
+        readysteadygo::Threads.Atomic{Int}
+    )
     @debug "Initializing MultithreadEvaluator worker #$workerix at thread=#$(Threads.threadid())"
     Threads.atomic_add!(readysteadygo, 1)
     while !is_stopping(eval) && readysteadygo[] <= 0
@@ -271,17 +283,17 @@ function run_mteval_worker(
                     unlock(eval.jobs_queue_lock)
                 end
             else
-                pause(worker, longer=((i += 1) & 0xFFFF) == 0)
+                pause(worker, longer = ((i += 1) & 0xFFFF) == 0)
             end
         end
     catch ex
-        @warn "Exception at MultithreadEvaluator worker #$workerix" exception=ex
+        @warn "Exception at MultithreadEvaluator worker #$workerix" exception = ex
         worker.is_available = false
         showerror(stderr, ex, catch_backtrace())
         rethrow(ex)
     end
     @debug "MultithreadEvaluator worker #$workerix finished"
-    nothing
+    return nothing
 end
 
 # Calculates the fitness of the next candidate in the job and puts the
@@ -289,10 +301,10 @@ end
 # Moves the job from eval.jobs_queue to eval.iterated_jobs if it has no
 # other candidates.
 function calculate_fitness(
-    job::MTFitnessEvalJob,
-    eval::MultithreadEvaluator,
-    workerix::Int
-)
+        job::MTFitnessEvalJob,
+        eval::MultithreadEvaluator,
+        workerix::Int
+    )
     worker = eval.workers[workerix]
     #@debug "worker #$workerix calculate(): taking candidate"
     candi = take_candidate!(job)
@@ -336,7 +348,7 @@ end
 # silent (no IO) shutdown of the evaluator, to please the finalizer()
 # set the is_stopping flag so that the workers can quit from their locks
 function _shutdown!(eval::MultithreadEvaluator)
-    eval.is_stopping = true
+    return eval.is_stopping = true
 end
 
 # shutdown the evaluator, automatically called when the error occurs
@@ -354,7 +366,7 @@ function shutdown!(eval::MultithreadEvaluator)
     end
     @info "shutdown!(MultithreadEvaluator): all $(nworkers(eval)) workers stopped"
     @info "shutdown!(MultithreadEvaluator): num_evals=$(num_evals(eval)), num_jobs=$(eval.num_jobs)"
-    @info "shutdown!(MultithreadEvaluator): function evals per worker: $(join([worker.num_evals for worker in eval.workers], ", "))"
+    return @info "shutdown!(MultithreadEvaluator): function evals per worker: $(join([worker.num_evals for worker in eval.workers], ", "))"
 end
 
 # Discards the job object releasing the reusable resources back to the
@@ -368,7 +380,7 @@ function discard!(eval::MultithreadEvaluator, job::MTFitnessEvalJob)
 
     #@debug "discard!(): removing the job from iterated_jobs"
     if smartlock(eval.iterated_jobs_lock, eval)
-        ix = findfirst(j -> j===job, eval.iterated_jobs)
+        ix = findfirst(j -> j === job, eval.iterated_jobs)
         @assert !isnothing(ix)
         deleteat!(eval.iterated_jobs, ix)
         unlock(eval.iterated_jobs_lock)
@@ -400,7 +412,7 @@ function async_update_fitness!(eval::MultithreadEvaluator, candidates::Any; forc
     if smartlock(eval.jobs_queue_lock, eval)
         push!(eval.jobs_queue, job)
         # hint the scheduler on which thread to run the job
-        wake_worker = findnext(isavailable, eval.workers, eval.last_woken_worker+1)
+        wake_worker = findnext(isavailable, eval.workers, eval.last_woken_worker + 1)
         # if not found, search from the beginning
         isnothing(wake_worker) && (wake_worker = findfirst(isavailable, eval.workers))
         if wake_worker !== nothing
@@ -424,15 +436,15 @@ function sync_update_fitness(f::Any, job::MTFitnessEvalJob, eval::MultithreadEva
         #@debug "sync_update_fitness(): wait until new results: hasnext=$(has_next_candidate(job)), npending=$(job.npending[]), results=$(length(job.results))"
         i = 0
         while !is_stopping(eval) && isempty(job.results)
-            if ((i+=1) & 0xFFFF) == 0
+            if ((i += 1) & 0xFFFF) == 0
                 if all(isactive, eval.workers)
-                    pause(eval, longer=true)
+                    pause(eval, longer = true)
                 else
                     @warn "MultithreadEvaluator: some workers have stopped, shutting down"
                     shutdown!(eval)
                 end
             else
-                pause(eval, longer=false)
+                pause(eval, longer = false)
             end
         end
         is_stopping(eval) && continue
@@ -472,18 +484,18 @@ function sync_update_fitness(f::Any, job::MTFitnessEvalJob, eval::MultithreadEva
     return job.candidates
 end
 
-function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any; force::Bool=false)
-    job = async_update_fitness!(eval, candidates, force=force)
+function update_fitness!(f::Any, eval::MultithreadEvaluator, candidates::Any; force::Bool = false)
+    job = async_update_fitness!(eval, candidates, force = force)
     isnothing(job) && return candidates # nothing to do
-    sync_update_fitness(f, job, eval)
+    return sync_update_fitness(f, job, eval)
 end
 
-update_fitness!(f::Any, eval::MultithreadEvaluator, candidate::Candidate; force::Bool=false) =
-    update_fitness!(f, eval, (candidate,), force=force)[1]
+update_fitness!(f::Any, eval::MultithreadEvaluator, candidate::Candidate; force::Bool = false) =
+    update_fitness!(f, eval, (candidate,), force = force)[1]
 
 # WARNING it's not efficient to synchronously calculate single fitness using
 # asynchronous `MultithreadEvaluator`
-function fitness(params::Individual, eval::MultithreadEvaluator, tag::Int=0)
+function fitness(params::Individual, eval::MultithreadEvaluator, tag::Int = 0)
     candi = candidate_type(eval)(params, -1, eval.arch_nafitness, nothing, tag)
     update_fitness!(eval, (candi,))
     return fitness(candi)

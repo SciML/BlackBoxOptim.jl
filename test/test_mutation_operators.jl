@@ -50,8 +50,8 @@
             n_params_mutated += ind != ref_ind
         end
         # the number of parameters changed should roughly match the weight of MutationClock multiplied by its mutation probability
-        @test n_params_mutated/numdims(ss) > 200
-        @test n_params_mutated/numdims(ss) < 500
+        @test n_params_mutated / numdims(ss) > 200
+        @test n_params_mutated / numdims(ss) < 500
     end
 
     @testset "FAGeneticOperatorsMixture" begin
@@ -72,8 +72,8 @@
         end
         # FA should adjust frequencies to [almost] always apply mutation clock
         # the number of parameters changed should roughly match the MutationClock mutation probability
-        @test n_params_mutated/numdims(ss) > 300
-        @test n_params_mutated/numdims(ss) < 700
+        @test n_params_mutated / numdims(ss) > 300
+        @test n_params_mutated / numdims(ss) < 700
         @test frequencies(mx)[1] < 0.1
         @test frequencies(mx)[2] > 0.9
     end

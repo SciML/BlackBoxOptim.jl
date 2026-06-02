@@ -9,17 +9,18 @@ mutable struct FitnessQueue{F}
     end
 end
 
-function setall!(q::FitnessQueue{F}, val::F) where F
+function setall!(q::FitnessQueue{F}, val::F) where {F}
     for i in 1:q.delay
         q.queue[i] = val
     end
+    return
 end
 delay(q::FitnessQueue{F}) where {F} = q.delay
 length(q::FitnessQueue{F}) where {F} = q.delay
 lastfitness(q::FitnessQueue{F}) where {F} = q.queue[q.start]
 nextidx(q::FitnessQueue{F}) where {F} = (q.start == q.delay) ? 1 : (q.start + 1)
 delayedfitness(q::FitnessQueue{F}) where {F} = q.queue[nextidx(q)]
-function add(q::FitnessQueue{F}, val::F) where F
+function add(q::FitnessQueue{F}, val::F) where {F}
     q.numadded += 1
     if q.numadded == 1
         setall!(q, val)
@@ -50,8 +51,8 @@ end
 #delayedfitness(fq)
 
 # Burke and Yukov propose the greedy_or_late_acceptance_rule
-function greedy_or_late_acceptance_rule(q::FitnessQueue{F}, f::F) where F
-    f < delayedfitness(fq) || f < lastfitness(fq)
+function greedy_or_late_acceptance_rule(q::FitnessQueue{F}, f::F) where {F}
+    return f < delayedfitness(fq) || f < lastfitness(fq)
 end
 
 late_acceptance_rule(q::FitnessQueue{F}, f::F) where {F} = f < delayedfitness(fq)

@@ -9,31 +9,31 @@ If the goal is to maximize each individual fitness component
 Pareto-dominating points should use `MIN = false` and Pareto-dominated points
 should use `MIN = true`.
 """
-struct DominanceCone{F,N,MIN} <: SI.Region{F,N}
-    pt::NTuple{N,F}
+struct DominanceCone{F, N, MIN} <: SI.Region{F, N}
+    pt::NTuple{N, F}
 
-    function DominanceCone{MIN}(pt::NTuple{N,F}) where {F,N,MIN}
+    function DominanceCone{MIN}(pt::NTuple{N, F}) where {F, N, MIN}
         (MIN isa Bool) || throw(ArgumentError("MIN should be true or false (got $MIN)"))
-        new{F,N,MIN}(pt)
+        return new{F, N, MIN}(pt)
     end
 end
 
-is_minimizing(a::DominanceCone{<:Any,<:Any,MIN}) where MIN = MIN
+is_minimizing(a::DominanceCone{<:Any, <:Any, MIN}) where {MIN} = MIN
 
 # function to help define contains/intersects for all MIN values
 # rely on constant propagation of lt for efficient compilation
 isordered(lt::Bool, a::Number, b::Number) = lt ? a < b : a > b
 
-@generated SI.contains(a::DominanceCone{F,N,MIN}, b::NTuple{N,F}) where {F,N,MIN} =
+@generated SI.contains(a::DominanceCone{F, N, MIN}, b::NTuple{N, F}) where {F, N, MIN} =
     quote
-        isordered(MIN, a.pt[1], b[1]) && return false
-        anylt = isordered(MIN, b[1], a.pt[1])
-        @inbounds Base.Cartesian.@nexprs $(N-1) i -> begin
-            isordered(MIN, a.pt[i+1], b[i+1]) && return false
-            anylt || (anylt = isordered(MIN, b[i+1], a.pt[i+1]))
-        end
-        return anylt
+    isordered(MIN, a.pt[1], b[1]) && return false
+    anylt = isordered(MIN, b[1], a.pt[1])
+    @inbounds Base.Cartesian.@nexprs $(N - 1) i -> begin
+        isordered(MIN, a.pt[i + 1], b[i + 1]) && return false
+        anylt || (anylt = isordered(MIN, b[i + 1], a.pt[i + 1]))
     end
+    return anylt
+end
 
 SI.contains(a::DominanceCone, b::SI.Point) = SI.contains(a, b.coord)
 SI.intersects(a::DominanceCone, b::SI.Point) = SI.contains(a, b)

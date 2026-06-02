@@ -23,18 +23,20 @@ mutable struct FrequencyAdapter
     deltahat::Float64     # Running average of the progress values.
 
     block::Vector{Int}    # current queue of methods to apply
-    block_pos::Int		# current position in the queue
+    block_pos::Int        # current position in the queue
 
     numupdates::Int     # Number of times we have been updated.
     min_updates::Int    # Number of updates until we start adapting frequencies.
 
-    function FrequencyAdapter(n; c = 0.2, eta = 1/n, pmin = 0.05, pmax = 20.0)
-        new(n, eta, c, pmin, pmax,
-            fill(1/n, n), 1.0,
+    function FrequencyAdapter(n; c = 0.2, eta = 1 / n, pmin = 0.05, pmax = 20.0)
+        return new(
+            n, eta, c, pmin, pmax,
+            fill(1 / n, n), 1.0,
             zeros(Float64, n),
             0.0,
             shuffle!(collect(1:n)), 1,
-            0, n)
+            0, n
+        )
     end
 end
 
@@ -58,7 +60,7 @@ function next(fa::FrequencyAdapter)
     end
     #println("Taking $(fa.block_pos) from block = ", fa.block)
     fa.block_pos += 1
-    return fa.block[fa.block_pos-1]
+    return fa.block[fa.block_pos - 1]
 end
 
 """
@@ -80,7 +82,7 @@ function fill_block!(fa::FrequencyAdapter)
             ai -= nai # adjust the remainder
             new_pos = last_pos + nai
             resize!(fa.block, new_pos)
-            fa.block[(last_pos+1):(new_pos)] .= i
+            fa.block[(last_pos + 1):(new_pos)] .= i
             last_pos = new_pos
         end
         fa.a[i] = ai
@@ -97,7 +99,7 @@ function fill_block!(fa::FrequencyAdapter)
     end
     #println("Created new block = ", block)
     fa.block_pos = 1
-    shuffle!(fa.block)
+    return shuffle!(fa.block)
 end
 
 """
@@ -109,8 +111,10 @@ function update!(fa::FrequencyAdapter, methodIndex, progress)
     # If we already have collected a few samples of progress rates we can update
     # the pi. This is the common case.
     if fa.numupdates >= fa.min_updates
-        pnew = fa.deltahat > 0 ? clamp(fa.p[methodIndex] * exp(fa.c * (progress / fa.deltahat - 1)),
-                                       fa.pmin, fa.pmax) : fa.pmin
+        pnew = fa.deltahat > 0 ? clamp(
+                fa.p[methodIndex] * exp(fa.c * (progress / fa.deltahat - 1)),
+                fa.pmin, fa.pmax
+            ) : fa.pmin
         #print("i = ", methodIndex, ", pi = ", fa.p[methodIndex], ", pnew = ", pnew, ", psum = ", fa.psum)
         fa.psum += (pnew - fa.p[methodIndex])
         fa.p[methodIndex] = pnew
@@ -123,7 +127,7 @@ function update!(fa::FrequencyAdapter, methodIndex, progress)
         fa.deltahat += progress
     end
     fa.numupdates += 1
-    if fa.numupdates == fa.min_updates
+    return if fa.numupdates == fa.min_updates
         #print("Setting deltahat, was = ", fa.deltahat, " (min_updates = $(fa.min_updates))")
         fa.deltahat = fa.deltahat / fa.min_updates
         #println(", now = ", fa.deltahat)

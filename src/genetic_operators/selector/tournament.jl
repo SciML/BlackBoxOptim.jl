@@ -6,20 +6,20 @@ mutable struct TournamentSelector{H} <: IndividualsSelector
     size::Int       # tournament size
 end
 
-function TournamentSelector(fs::FitnessScheme, size::Int=2)
+function TournamentSelector(fs::FitnessScheme, size::Int = 2)
     h = HatCompare(fs)
-    TournamentSelector{typeof(h)}(h, size)
+    return TournamentSelector{typeof(h)}(h, size)
 end
 
 # selection using `n_tours` tournaments
 function select(sel::TournamentSelector, population, n_tours::Int)
-    n_candidates = min(popsize(population), sel.size*n_tours)
-    all_candidates = sample(1:popsize(population), n_candidates, replace=false, ordered=false)
+    n_candidates = min(popsize(population), sel.size * n_tours)
+    all_candidates = sample(1:popsize(population), n_candidates, replace = false, ordered = false)
 
     res = Vector{Int}(undef, n_tours)
     tour_candidates = Vector{Int}(undef, sel.size)
     @inbounds for i in eachindex(res)
-        copyto!(tour_candidates, 1, all_candidates, 1+(i-1)*sel.size, sel.size)
+        copyto!(tour_candidates, 1, all_candidates, 1 + (i - 1) * sel.size, sel.size)
         res[i] = tournament(sel, population, tour_candidates)
     end
     return res

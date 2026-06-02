@@ -19,10 +19,10 @@
 
             @test isa(p1[popsize(p1)], Vector{Float64}) # last solution vector
             @test_throws BoundsError p1[0]
-            @test_throws BoundsError p1[popsize(p1)+1]
+            @test_throws BoundsError p1[popsize(p1) + 1]
             @test_throws BoundsError BlackBoxOptim.viewer(p1, 0)
-            @test_throws BoundsError BlackBoxOptim.viewer(p1, popsize(p1)+1)
-            rand_solution_idx = rand(2:(popsize(p1)-1))
+            @test_throws BoundsError BlackBoxOptim.viewer(p1, popsize(p1) + 1)
+            rand_solution_idx = rand(2:(popsize(p1) - 1))
             @test isa(p1[rand_solution_idx], Array{Float64, 1}) # random solution vector
         end
 
@@ -30,9 +30,9 @@
             # and to access their fitness values:
             @test isa(fitness(p1, 1), Float64)
             @test isa(fitness(p1, popsize(p1)), Float64)
-            rand_solution_idx = rand(2:(popsize(p1)-1))
+            rand_solution_idx = rand(2:(popsize(p1) - 1))
             @test_throws BoundsError fitness(p1, 0)
-            @test_throws BoundsError fitness(p1, popsize(p1)+1)
+            @test_throws BoundsError fitness(p1, popsize(p1) + 1)
         end
 
         @testset "candidates pool" begin

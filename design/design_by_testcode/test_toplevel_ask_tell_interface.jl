@@ -25,9 +25,9 @@ using BlackBoxOptim: hassolution, setsolution!, solution
         # When we ask for solutions we get either solutions for params
         # we previously supplied or empty Nullables. The alternative would
         # be to embed the solutions in the Candidate struct and let user
-        # have getters/setters for them. Seems unnecessary to add this 
+        # have getters/setters for them. Seems unnecessary to add this
         # level of complexity. Easier to have a general top-level interface
-        # where we can get and set solutions/phenotypes associated with each 
+        # where we can get and set solutions/phenotypes associated with each
         # set of parameters. OTOH we will probably save the solutions in the
         # candidates anyway so users that require a more control can just ask
         # to get the candidates themselves and then return them (sorted).
@@ -57,10 +57,10 @@ using BlackBoxOptim: hassolution, setsolution!, solution
         end
 
         # A usability risk here is that the user only sorts one of the arrays
-        # returned? Another risk is that the fitnesses might not be comparable on 
+        # returned? Another risk is that the fitnesses might not be comparable on
         # a global scale, i.e. between calls to ask/tell. This is likely to mess up
         # tracing and archives as well as the saving of the "best" individuals. OTOH,
-        # since optimization is "driven" from the outside maybe the resposibility for 
+        # since optimization is "driven" from the outside maybe the resposibility for
         # keeping history, tracing etc should be on the user rather than on BBO?
         p = sortperm(fs)
         tell!(oc, params[p], fs[p], newsolutions[p])

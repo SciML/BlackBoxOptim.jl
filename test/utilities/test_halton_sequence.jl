@@ -3,12 +3,12 @@ haltonsequence = BlackBoxOptim.Utils.haltonsequence
 
 # The Halton sequence with base 2 according to http://en.wikipedia.org/wiki/Halton_sequence
 HaltonSequence2 = [
-    1/2, 1/4, 3/4, 1/8, 5/8, 3/8, 7/8, 1/16, 9/16
+    1 / 2, 1 / 4, 3 / 4, 1 / 8, 5 / 8, 3 / 8, 7 / 8, 1 / 16, 9 / 16,
 ]
 
 # The Halton sequence with base 2 according to http://en.wikipedia.org/wiki/Halton_sequence
 HaltonSequence3 = [
-    1/3, 2/3, 1/9, 4/9, 7/9, 2/9, 5/9, 8/9, 1/27
+    1 / 3, 2 / 3, 1 / 9, 4 / 9, 7 / 9, 2 / 9, 5 / 9, 8 / 9, 1 / 27,
 ]
 
 @testset "Halton numbers and sequence" begin
@@ -22,7 +22,7 @@ HaltonSequence3 = [
         map(1:length(HaltonSequence3)) do i
             @test isapprox(haltonnumber(3, i), HaltonSequence3[i])
         end
-    
+
     end
 
     @testset "Halton sequences" begin

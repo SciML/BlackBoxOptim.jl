@@ -9,7 +9,7 @@ mutable struct SlidingBitset
     max_el::Int     # max element contained in the set
     els::BitSet     # elements greater than max_seq_el that are in the set
 
-    SlidingBitset(; max_seq_el::Integer=0) = new(max_seq_el, max_seq_el, BitSet())
+    SlidingBitset(; max_seq_el::Integer = 0) = new(max_seq_el, max_seq_el, BitSet())
 end
 
 # how much the BitSet offset could differ from max_seq_el/64
@@ -21,19 +21,19 @@ function Base.push!(set::SlidingBitset, el::Integer)
     if el > set.max_el
         set.max_el = el
     end
-    if el == set.max_seq_el+1
+    if el == set.max_seq_el + 1
         # update the next sequential el
         set.max_seq_el = el
         # see if max_seq_el could be further advanced using els
-        while (set.max_el > set.max_seq_el) && in(set.els, set.max_seq_el+1)
+        while (set.max_el > set.max_seq_el) && in(set.els, set.max_seq_el + 1)
             set.max_seq_el += 1
         end
         if !isempty(set.els) && Base._div64(set.max_seq_el) > set.els.offset + SLIDE_OFFSET
             # slide els bitset
             len = length(set.els.bits)
             if len > SLIDE_OFFSET
-                copyto!(set.els.bits, 1, set.els.bits, SLIDE_OFFSET+1, len-SLIDE_OFFSET)
-                fill!(view(set.els.bits, max(1, len-SLIDE_OFFSET+1):len), 0)
+                copyto!(set.els.bits, 1, set.els.bits, SLIDE_OFFSET + 1, len - SLIDE_OFFSET)
+                fill!(view(set.els.bits, max(1, len - SLIDE_OFFSET + 1):len), 0)
             else
                 fill!(set.els.bits, 0)
             end

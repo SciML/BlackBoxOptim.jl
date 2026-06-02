@@ -1,5 +1,5 @@
 function michaelis_menten_model(concentration, Vm, K)
-    (Vm * concentration) / (K + concentration)
+    return (Vm * concentration) / (K + concentration)
 end
 
 # MicMen data is taken from the README of the NLReg.jl package: https://github.com/dmbates/NLreg.jl
@@ -26,12 +26,14 @@ MicMenRate = MicMenData[:, 2];
 function mic_men_fitness(params)
     Vm, K = params
     yhat = Float64[michaelis_menten_model(c, Vm, K) for c in MicMenConcentration]
-    sumabs2(MicMenRate .- yhat)
+    return sumabs2(MicMenRate .- yhat)
 end
 
 using BlackBoxOptim
-result = bboptimize(mic_men_fitness; 
-  SearchRange = (-1000.0, 1000.0), NumDimensions = 2, MaxSteps = 1e4)
+result = bboptimize(
+    mic_men_fitness;
+    SearchRange = (-1000.0, 1000.0), NumDimensions = 2, MaxSteps = 1.0e4
+)
 Vm, K = best_candidate(result)
 RSS = best_fitness(result)
 

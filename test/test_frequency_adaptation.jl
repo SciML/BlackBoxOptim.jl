@@ -31,8 +31,8 @@
             end
             uprep(n)
             @test counts == ones(Int, n)
-            uprep(20*n)
-            @test counts[1] > sum(counts[2:end])/(n-1)
+            uprep(20 * n)
+            @test counts[1] > sum(counts[2:end]) / (n - 1)
         end
     end
 end

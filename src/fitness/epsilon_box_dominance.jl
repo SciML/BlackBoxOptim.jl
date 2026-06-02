@@ -3,9 +3,10 @@
 function epsilon_box_dominates_and_epsilon_progress(u, v, epsilon)
     uindex = floor(u ./ epsilon)
     vindex = floor(v ./ epsilon)
-    inner_epsilon_box_dominates_and_epsilon_progress(
+    return inner_epsilon_box_dominates_and_epsilon_progress(
         u, uindex, (epsilon .* uindex),
-        v, vindex, (epsilon .* vindex))
+        v, vindex, (epsilon .* vindex)
+    )
 end
 
 # FIXME
@@ -17,8 +18,9 @@ epsilon_box_progress(u, v, epsilon) = epsilon_box_dominates_and_epsilon_progress
 # This is to speed up processing when there is a whole archive of solutions to compare
 # a new solution to.
 function inner_epsilon_box_dominates_and_epsilon_progress(
-    u, uindex, uindextimesepsilon,
-    v, vindex, vindextimesepsilon)
+        u, uindex, uindextimesepsilon,
+        v, vindex, vindextimesepsilon
+    )
 
     if pareto_dominates_fast(uindex, vindex)
         return (true, true)

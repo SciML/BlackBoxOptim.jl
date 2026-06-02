@@ -15,14 +15,17 @@ mutable struct RealtimePlot{E}
     starttime::Float64
     stoptime::Union{Float64, Nothing}
 
-    function RealtimePlot{E}(template::AbstractString;
-        verbose::Bool = false,
-        spec_kwargs...
-    ) where E
+    function RealtimePlot{E}(
+            template::AbstractString;
+            verbose::Bool = false,
+            spec_kwargs...
+        ) where {E}
         @assert E isa Symbol
-        spec = reduce(replace_template_param, spec_kwargs,
-                      init = template)
-        new{E}(spec, verbose, Any[], 0, 0.0, nothing)
+        spec = reduce(
+            replace_template_param, spec_kwargs,
+            init = template
+        )
+        return new{E}(spec, verbose, Any[], 0, 0.0, nothing)
     end
 end
 
@@ -30,7 +33,7 @@ timestamp(t = time()) = Libc.strftime("%Y-%m-%d %H:%M.%S", t)
 printmsg(plot::RealtimePlot, msg) = plot.verbose ? println(timestamp(), ": ", msg) : nothing
 
 function shutdown!(plot::RealtimePlot)
-    plot.stoptime = time()
+    return plot.stoptime = time()
 end
 
 function Base.push!(plot::RealtimePlot, newentry::AbstractDict)
@@ -41,7 +44,7 @@ function Base.push!(plot::RealtimePlot, newentry::AbstractDict)
         newentry["Time"] = time() - plot.starttime
     end
     printmsg(plot, "Adding data $newentry")
-    push!(plot.data, newentry)
+    return push!(plot.data, newentry)
 end
 
 hasnewdata(plot::RealtimePlot) = length(plot.data) > plot.last_sent_index
@@ -71,12 +74,16 @@ const VegaLiteMetricOverTimePlotTemplate = """
 }
 """
 
-VegaLiteMetricOverTimePlot(; metric::String = "Fitness",
-                           width::Integer = 800, height::Integer = 600,
-                           kwargs...) =
-    RealtimePlot{:VegaLite}(VegaLiteMetricOverTimePlotTemplate;
-                            metric=metric, width=width, height=height,
-                            kwargs...)
+VegaLiteMetricOverTimePlot(;
+    metric::String = "Fitness",
+    width::Integer = 800, height::Integer = 600,
+    kwargs...
+) =
+    RealtimePlot{:VegaLite}(
+    VegaLiteMetricOverTimePlotTemplate;
+    metric = metric, width = width, height = height,
+    kwargs...
+)
 
 """
     fitness_plot_callback(plot::RealtimePlot, oc::OptRunController)
@@ -84,9 +91,13 @@ VegaLiteMetricOverTimePlot(; metric::String = "Fitness",
 [OptController](@ref) callback function that updates the real-time fitness plot.
 """
 function fitness_plot_callback(plot::RealtimePlot, oc::OptRunController)
-    push!(plot, Dict("num_steps" => num_steps(oc),
-                     "Fitness" => best_fitness(oc)))
-    if oc.stop_reason != ""
+    push!(
+        plot, Dict(
+            "num_steps" => num_steps(oc),
+            "Fitness" => best_fitness(oc)
+        )
+    )
+    return if oc.stop_reason != ""
         @info "Shutting down realtime plot"
         shutdown!(plot)
     end
