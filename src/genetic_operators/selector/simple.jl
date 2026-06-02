@@ -7,4 +7,4 @@ struct SimpleSelector <: IndividualsSelector
 end
 
 select(::SimpleSelector, population, n::Integer) =
-    sample(1:popsize(population), n, ordered=false, replace=false)
+    sample(1:popsize(population), n, ordered = false, replace = false)

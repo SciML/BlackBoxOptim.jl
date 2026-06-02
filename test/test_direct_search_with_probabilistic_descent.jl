@@ -17,7 +17,7 @@
         @test size(u, 1) == n
         @test size(u, 2) == num
         for j in 1:num
-            @test isapprox( norm(u[:,j]), 1.0 )
+            @test isapprox(norm(u[:, j]), 1.0)
         end
     end
 
@@ -40,15 +40,15 @@ end
     mrdg1 = BlackBoxOptim.MirroredRandomDirectionGen(2, 4)
     ds1 = BlackBoxOptim.directions_for_k(mrdg1, 1)
     @test size(ds1) == (2, 4)
-    @test ds1[:,3] == -ds1[:,1]
-    @test ds1[:,4] == -ds1[:,2]
+    @test ds1[:, 3] == -ds1[:, 1]
+    @test ds1[:, 4] == -ds1[:, 2]
 
     mrdg2 = BlackBoxOptim.MirroredRandomDirectionGen(10, 6)
     ds2 = BlackBoxOptim.directions_for_k(mrdg2, 1)
     @test size(ds2) == (10, 6)
-    @test ds2[:,4] == -ds2[:,1]
-    @test ds2[:,5] == -ds2[:,2]
-    @test ds2[:,6] == -ds2[:,3]
+    @test ds2[:, 4] == -ds2[:, 1]
+    @test ds2[:, 5] == -ds2[:, 2]
+    @test ds2[:, 6] == -ds2[:, 3]
 
     # Must be even number of directions
     @test_throws ArgumentError BlackBoxOptim.MirroredRandomDirectionGen(10, 1)

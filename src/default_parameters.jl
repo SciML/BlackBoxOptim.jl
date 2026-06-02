@@ -4,33 +4,33 @@ Default parameters for all convenience methods that are exported to the end user
 See `OptRunController` for the description.
 """
 const DefaultParameters = ParamsDict(
-    :NumDimensions  => :NotSpecified, # Dimension of problem to be optimized
-    :SearchRange    => (-1.0, 1.0), # Default search range to use per dimension unless specified
-    :SearchSpace    => false, # Search space can be directly specified and will then take precedence over NumDimensions and SearchRange.
-    :FitnessScheme  => MinimizingFitnessScheme, # fitness scheme to be used
+    :NumDimensions => :NotSpecified, # Dimension of problem to be optimized
+    :SearchRange => (-1.0, 1.0), # Default search range to use per dimension unless specified
+    :SearchSpace => false, # Search space can be directly specified and will then take precedence over NumDimensions and SearchRange.
+    :FitnessScheme => MinimizingFitnessScheme, # fitness scheme to be used
     :TargetFitness => nothing, # optimal (target) fitness, if known
 
     :Method => :adaptive_de_rand_1_bin_radiuslimited,
 
-    :MaxTime        => 0.0,
-    :MaxFuncEvals   => 0,
-    :MaxSteps       => 10000,
+    :MaxTime => 0.0,
+    :MaxFuncEvals => 0,
+    :MaxSteps => 10000,
     :MaxStepsWithoutProgress => 10000,
-    :MinDeltaFitnessTolerance => 1e-50,
-    :FitnessTolerance => 1e-8,
+    :MinDeltaFitnessTolerance => 1.0e-50,
+    :FitnessTolerance => 1.0e-8,
 
     :MaxNumStepsWithoutFuncEvals => 100,
 
     :NumRepetitions => 1,     # Number of repetitions to run for each optimizer for each problem
 
-    :TraceMode      => :compact,  # Print tracing information during the optimization
-    :TraceInterval  => 0.50,  # Minimum number of seconds between consecutive trace messages printed to STDOUT
-    :SaveTrace      => false,
+    :TraceMode => :compact,  # Print tracing information during the optimization
+    :TraceInterval => 0.5,  # Minimum number of seconds between consecutive trace messages printed to STDOUT
+    :SaveTrace => false,
     :SaveFitnessTraceToCsv => false, # Save a csv file with information about the major fitness improvement events (only the first event in each fitness magnitude class is saved)
     :SaveParameters => false, # Save parameters to a json file for later scrutiny
 
     :CallbackFunction => x -> x, # Function to callback to, here just the identity function.
-    :CallbackInterval  => -1.0,  # Minimum number of seconds between consecutive callbacks. If <0.0 we never callback (which is the default).
+    :CallbackInterval => -1.0,  # Minimum number of seconds between consecutive callbacks. If <0.0 we never callback (which is the default).
 
     :PopulationSize => 50
 )
@@ -41,7 +41,7 @@ function check_and_create_search_space(params::Parameters)
         ss = params[:SearchSpace]
         if isa(ss, SearchSpace)
             return ss
-        elseif isa(ss, AbstractVector{<:Tuple{Real,Real}})
+        elseif isa(ss, AbstractVector{<:Tuple{Real, Real}})
             return RectSearchSpace(ss)
         elseif ss == false
             # silently fallthrough to the other means of search space specification
@@ -62,7 +62,7 @@ function check_and_create_search_space(params::Parameters)
                 throw(ArgumentError("You MUST specify NumDimensions= in a solution when giving a SearchRange=$(sr)"))
             end
             return RectSearchSpace(params[:NumDimensions], sr)
-        elseif isa(sr, AbstractVector{<:Tuple{Real,Real}})
+        elseif isa(sr, AbstractVector{<:Tuple{Real, Real}})
             return RectSearchSpace(sr)
         else
             throw(ArgumentError("Using $(typeof(sr)) for SearchRange is not supported."))
@@ -70,14 +70,20 @@ function check_and_create_search_space(params::Parameters)
     end
 
     # No valid search space have been specified => bail.
-    throw(ArgumentError("Invalid search space specification ("*
-                        "SearchSpace = $(params[:SearchSpace]), "*
-                        "SearchRange = $(params[:SearchRange]), "*
-                        "NumDimensions = $(params[:NumDimensions]))"))
+    throw(
+        ArgumentError(
+            "Invalid search space specification (" *
+                "SearchSpace = $(params[:SearchSpace]), " *
+                "SearchRange = $(params[:SearchRange]), " *
+                "NumDimensions = $(params[:NumDimensions]))"
+        )
+    )
 end
 
-function check_valid!(params::Parameters;
-                      user_explicit::Union{AbstractSet{Symbol},Nothing} = nothing)
+function check_valid!(
+        params::Parameters;
+        user_explicit::Union{AbstractSet{Symbol}, Nothing} = nothing
+    )
     # When the caller did not tell us which keys came from the user (vs. from
     # `DefaultParameters`), fall back to the legacy behavior of letting MaxTime
     # silently override the other budget knobs. This keeps third-party callers
@@ -104,11 +110,11 @@ function check_valid!(params::Parameters;
     end
 
     # Check that a valid number of fevals has been specified. Print warning if higher than 1e8.
-    if haskey(params,:MaxFuncEvals)
+    if haskey(params, :MaxFuncEvals)
         if !isa(params[:MaxFuncEvals], Integer) || params[:MaxFuncEvals] < 0.0
             throw(ArgumentError("MaxFuncEvals parameter MUST be a non-negative integer"))
         elseif params[:MaxFuncEvals] > 0.0
-            if params[:MaxFuncEvals] >= 1e8
+            if params[:MaxFuncEvals] >= 1.0e8
                 @warn("Number of allowed function evals is $(params[:MaxFuncEvals]); this can take a LONG time")
             end
             params[:MaxFuncEvals] = convert(Int, params[:MaxFuncEvals])
@@ -123,7 +129,7 @@ function check_valid!(params::Parameters;
         if !isa(params[:MaxSteps], Number) || params[:MaxSteps] < 0.0
             throw(ArgumentError("The number of iterations (MaxSteps) MUST be a non-negative number"))
         elseif params[:MaxSteps] > 0.0
-            if params[:MaxSteps] >= 1e8
+            if params[:MaxSteps] >= 1.0e8
                 @warn("Number of allowed iterations is $(params[:MaxSteps]); this can take a LONG time")
             end
             params[:MaxSteps] = convert(Int, params[:MaxSteps])
@@ -138,7 +144,7 @@ function check_valid!(params::Parameters;
 
     method = params[:Method]
     # Check that a valid method has been specified and then set up the optimizer
-    if !isa(method, Symbol) || method ∉ BlackBoxOptim.MethodNames
+    return if !isa(method, Symbol) || method ∉ BlackBoxOptim.MethodNames
         throw(ArgumentError("The method specified, $(method), is NOT among the valid methods:   $(MethodNames)"))
     end
 end

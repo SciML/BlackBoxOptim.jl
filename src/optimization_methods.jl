@@ -38,5 +38,9 @@ const MultiObjectiveMethodNames = sort!(collect(keys(MultiObjectiveMethods)))
 Names of optimization methods accepted by `bboptimize()`,
 `:Method` keyword argument.
 """
-const MethodNames = sort!(vcat(SingleObjectiveMethodNames,
-                               MultiObjectiveMethodNames))
+const MethodNames = sort!(
+    vcat(
+        SingleObjectiveMethodNames,
+        MultiObjectiveMethodNames
+    )
+)

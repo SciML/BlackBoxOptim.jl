@@ -18,7 +18,7 @@
 # we select. Common to many of them is that they first calculate the deviances
 # between the model and the actual values the model should predict:
 function discrepancies(betas, x, y)
-  y' .- ( betas[1] .+ sum(broadcast(*, betas[2:end], x), dims=1) )
+    return y' .- (betas[1] .+ sum(broadcast(*, betas[2:end], x), dims = 1))
 end
 
 using LinearAlgebra
@@ -26,35 +26,35 @@ using LinearAlgebra
 # Given this setup we can now create an objective function for
 # Ordinare Least Squares (OLS) regression. This is actually just the L2 norm:
 function ols_regression_objective(beta, x, y)
-  norm(discrepancies(beta, x, y), 2)
+    return norm(discrepancies(beta, x, y), 2)
 end
 
 # And the L1 norm gives Least Absolute Deviations (LAD) (aka Robust regression) regression:
 function lad_regression_objective(beta, x, y)
-  norm(discrepancies(beta, x, y), 1)
+    return norm(discrepancies(beta, x, y), 1)
 end
 
 # And we can do LASSO and Ridge regression by adding a penalty on large coefficients, but
 # note that these also take a lambda constant:
 function regularized_regression_objective(lambda, beta, x, y, p = 2, q = 1)
-  norm(discrepancies(beta, x, y), p) + lambda * norm(beta[2:end], q)
+    return norm(discrepancies(beta, x, y), p) + lambda * norm(beta[2:end], q)
 end
 
 # By selecting p = 2 and q = 1 we get LASSO regression:
 function lasso_regression_objective(lambda, beta, x, y)
-  regularized_regression_objective(lambda, beta, x, y, 2, 1)
+    return regularized_regression_objective(lambda, beta, x, y, 2, 1)
 end
 
 # and by selecting p = 2 and q = 2 we get Ridge regression:
 function ridge_regression_objective(lambda, beta, x, y)
-  regularized_regression_objective(lambda, beta, x, y, 2, 2)
+    return regularized_regression_objective(lambda, beta, x, y, 2, 2)
 end
 
 # Ok, we're ready to do some regression. We need some data, lets start with
 # a way to generate data from models specified as julia functions. Lets start
 # with a simple model of 3 vars: X1 + 2*X2 - X3
 function m1(x)
-  x[1,:] + 2*x[2,:] - x[3,:]
+    return x[1, :] + 2 * x[2, :] - x[3, :]
 end
 
 # and we generate random input for it:
@@ -67,20 +67,26 @@ y1 = m1(x1)
 # a min value of -5.0 and a max value of 5.0, and the search is for 4
 # coefficients, one intercept and three for each of the values of x):
 using BlackBoxOptim
-olsresult = bboptimize(b -> ols_regression_objective(b, x1, y1); 
-  SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2e4)
+olsresult = bboptimize(
+    b -> ols_regression_objective(b, x1, y1);
+    SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2.0e4
+)
 @show (best_fitness(olsresult), best_candidate(olsresult))
 
 # But the really nice thing is that we can easily consider other objectives such as the LAD:
-ladresult = bboptimize(b -> lad_regression_objective(b, x1, y1); 
-  SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2e4)
+ladresult = bboptimize(
+    b -> lad_regression_objective(b, x1, y1);
+    SearchRange = (-10.0, 10.0), NumDimensions = 4, MaxSteps = 2.0e4
+)
 @show (best_fitness(ladresult), best_candidate(ladresult))
 
 # For regularized regression we can optimize for different values of lambda so
 # create a wrapper function that handles this:
-function regularized_opt(lambda, func, x, y, dims, its = 2e4)
-  bboptimize((b) -> func(lambda, b, x, y);
-    SearchRange = (-10.0, 10.0), NumDimensions = dims, MaxSteps = its)
+function regularized_opt(lambda, func, x, y, dims, its = 2.0e4)
+    return bboptimize(
+        (b) -> func(lambda, b, x, y);
+        SearchRange = (-10.0, 10.0), NumDimensions = dims, MaxSteps = its
+    )
 end
 
 lassores1 = regularized_opt(1, lasso_regression_objective, x1, y1, 4)
@@ -97,39 +103,39 @@ linear_terms(num) = [@sprintf(" * X%d", i) for i in 1:num]
 squared_terms(num) = [@sprintf(" * X%d^2", i) for i in 1:num]
 linsq_terms(num) = vcat(linear_terms(num), squared_terms(num))
 
-function sprint_predicted_model(fitresult, terms = nothing, skipIfLower = 1e-5)
-  bestfit = best_candidate(fitresult)
-  if terms == nothing
-    terms = linear_terms(length(bestfit)-1)
-  end
-  if length(terms) < length(bestfit)
-    terms = vcat([""], terms) # Put an empty term first which corresponds to intercept
-  end
-
-  signstr(value) = (value < 0.0) ? (@sprintf(" - %.3f", abs(value))) : (@sprintf(" + %.3f", value))
-
-  elems = Any[]
-  first_push = true
-  for i in 1:length(bestfit)
-    if abs(bestfit[i]) > skipIfLower
-      str = join([signstr(bestfit[i]), terms[i]])
-      if first_push
-        # Strip away leading sign since this it the first push
-        push!(elems, str[3:end])
-        first_push = false
-      else
-        push!(elems, str)
-      end
+function sprint_predicted_model(fitresult, terms = nothing, skipIfLower = 1.0e-5)
+    bestfit = best_candidate(fitresult)
+    if terms == nothing
+        terms = linear_terms(length(bestfit) - 1)
     end
-  end
+    if length(terms) < length(bestfit)
+        terms = vcat([""], terms) # Put an empty term first which corresponds to intercept
+    end
 
-  join(elems)
+    signstr(value) = (value < 0.0) ? (@sprintf(" - %.3f", abs(value))) : (@sprintf(" + %.3f", value))
+
+    elems = Any[]
+    first_push = true
+    for i in 1:length(bestfit)
+        if abs(bestfit[i]) > skipIfLower
+            str = join([signstr(bestfit[i]), terms[i]])
+            if first_push
+                # Strip away leading sign since this it the first push
+                push!(elems, str[3:end])
+                first_push = false
+            else
+                push!(elems, str)
+            end
+        end
+    end
+
+    return join(elems)
 end
 
 # Let's try a model which involves a squared terms:
 #   X1 + 4.13*X2*X2 - 3.14*X3
 function m2(x)
-  x[1,:] + (4.13 * x[2,:].^2) - (3.14 * x[3,:])
+    return x[1, :] + (4.13 * x[2, :] .^ 2) - (3.14 * x[3, :])
 end
 
 # and we generate random input for it:
@@ -140,23 +146,27 @@ y2 = m2(x2)
 # Before we regress we need to encode our beliefs about the general
 # structure of the model. Let's say we believe there are squared terms but we
 # do not know which ones. So we add one squared term per independent variable:
-x2m = zeros(3+3, 100)
-x2m[1:3,:] = x2
-x2m[4,:] = x2[1,:].^2
-x2m[5,:] = x2[2,:].^2
-x2m[6,:] = x2[3,:].^2
+x2m = zeros(3 + 3, 100)
+x2m[1:3, :] = x2
+x2m[4, :] = x2[1, :] .^ 2
+x2m[5, :] = x2[2, :] .^ 2
+x2m[6, :] = x2[3, :] .^ 2
 
 # With this we can fit models:
-m2_olsres = bboptimize((b) -> ols_regression_objective(b, x2m, y2); 
-  SearchRange = (-10.0, 10.0), NumDimensions = 7, MaxSteps = 5e4)
-m2_ladres = bboptimize((b) -> lad_regression_objective(b, x2m, y2); 
-  SearchRange = (-10.0, 10.0), NumDimensions = 7, MaxSteps = 5e4)
-m2_lassores1 = regularized_opt(1, lasso_regression_objective, x2m, y2, 7, 5e4)
-m2_lassores2 = regularized_opt(2, lasso_regression_objective, x2m, y2, 7, 5e4)
-m2_lassores3 = regularized_opt(3, lasso_regression_objective, x2m, y2, 7, 5e4)
-m2_ridgeres1 = regularized_opt(1, ridge_regression_objective, x2m, y2, 7, 5e4)
-m2_ridgeres2 = regularized_opt(2, ridge_regression_objective, x2m, y2, 7, 5e4)
-m2_ridgeres3 = regularized_opt(3, ridge_regression_objective, x2m, y2, 7, 5e4)
+m2_olsres = bboptimize(
+    (b) -> ols_regression_objective(b, x2m, y2);
+    SearchRange = (-10.0, 10.0), NumDimensions = 7, MaxSteps = 5.0e4
+)
+m2_ladres = bboptimize(
+    (b) -> lad_regression_objective(b, x2m, y2);
+    SearchRange = (-10.0, 10.0), NumDimensions = 7, MaxSteps = 5.0e4
+)
+m2_lassores1 = regularized_opt(1, lasso_regression_objective, x2m, y2, 7, 5.0e4)
+m2_lassores2 = regularized_opt(2, lasso_regression_objective, x2m, y2, 7, 5.0e4)
+m2_lassores3 = regularized_opt(3, lasso_regression_objective, x2m, y2, 7, 5.0e4)
+m2_ridgeres1 = regularized_opt(1, ridge_regression_objective, x2m, y2, 7, 5.0e4)
+m2_ridgeres2 = regularized_opt(2, ridge_regression_objective, x2m, y2, 7, 5.0e4)
+m2_ridgeres3 = regularized_opt(3, ridge_regression_objective, x2m, y2, 7, 5.0e4)
 
 # And now lets print our models nicely so user can see the results...
 

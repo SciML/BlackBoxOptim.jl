@@ -75,7 +75,7 @@
             for i in 1:NumTestRepetitions
                 dims = rand(1:100)
                 a = rand()
-                range = (a, a + (1-a)*rand())
+                range = (a, a + (1 - a) * rand())
                 ss = RectSearchSpace(dims, range)
                 @test numdims(ss) == dims
                 @test all(dr -> dr == range, dimrange(ss))
@@ -83,7 +83,7 @@
         end
 
         @testset "MixedPrecisionRectSearchSpace with given range" begin
-            ss1 = RectSearchSpace(1, (-1.0, 1.0), dimdigits=2)
+            ss1 = RectSearchSpace(1, (-1.0, 1.0), dimdigits = 2)
             @test ss1 isa MixedPrecisionRectSearchSpace
             @test numdims(ss1) == 1
             @test dimrange(ss1) == [(-1.0, 1.0)]
@@ -102,7 +102,7 @@
 
     @testset "rand_individuals()" begin
         @testset "rand_individual($SS) is within the search space" for
-                SS in (ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace)
+            SS in (ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace)
             for i in 1:NumTestRepetitions
                 dims = rand(1:100)
                 mm = sort!(rand(2))
@@ -117,22 +117,22 @@
         @testset "rand_individuals() creates many individuals and all are within the search space" begin
             for i in 1:NumTestRepetitions
                 reps = rand(1:10)
-                mm = sort(rand(2,1), dims=1)
+                mm = sort(rand(2, 1), dims = 1)
                 range = (mm[1], mm[2])
                 ss = RectSearchSpace(reps, range)
                 numinds = rand(1:10)
                 inds = rand_individuals(ss, numinds)
-                @test size(inds,1) == numdims(ss)
-                @test size(inds,2) == numinds
+                @test size(inds, 1) == numdims(ss)
+                @test size(inds, 2) == numinds
                 for j in 1:numinds
-                    @test in(inds[:,j], ss)
+                    @test in(inds[:, j], ss)
                 end
             end
         end
 
         @testset "rand_individuals(method=:$method) correctly handles individual dimensions in $SS" for
-                method in (:uniform, :latin_hypercube), SS in (ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace)
-            for _ in 1:NumTestRepetitions÷10
+            method in (:uniform, :latin_hypercube), SS in (ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace)
+            for _ in 1:(NumTestRepetitions ÷ 10)
                 numdimensions = rand(1:13)
                 minbounds = rand(numdimensions)
                 maxbounds = minbounds .+ rand(1:10, numdimensions) .* rand(numdimensions)
@@ -140,18 +140,18 @@
                 if digits !== nothing
                     for d in 1:numdimensions
                         if digits[d] >= 0
-                            minbounds[d] = round(minbounds[d], digits=digits[d])
-                            maxbounds[d] = round(maxbounds[d], digits=digits[d])
+                            minbounds[d] = round(minbounds[d], digits = digits[d])
+                            maxbounds[d] = round(maxbounds[d], digits = digits[d])
                         end
                     end
                 end
                 ss = RectSearchSpace(tuple.(minbounds, maxbounds), dimdigits = digits)
                 @test dimmin(ss) == minbounds
                 @test dimmax(ss) == maxbounds
-                @test round.(dimdelta(ss), digits=6) == round.(maxbounds .- minbounds, digits=6)
+                @test round.(dimdelta(ss), digits = 6) == round.(maxbounds .- minbounds, digits = 6)
 
                 # Now generate 100 individuals and make sure they are all within bounds
-                inds = rand_individuals(ss, 100, method=method)
+                inds = rand_individuals(ss, 100, method = method)
                 @test size(inds, 2) == 100
                 @inbounds for i in 1:size(inds, 2)
                     indi = view(inds, :, i)
@@ -164,23 +164,23 @@
         @testset "rand_individuals(method=:latin_hypercube) samples in LHS intervals" begin
             ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)])
 
-            inds = rand_individuals(ss, 2, method=:latin_hypercube)
+            inds = rand_individuals(ss, 2, method = :latin_hypercube)
             @test size(inds, 1) == 3
             @test size(inds, 2) == 2
 
-            sorted = sort(inds, dims=2) # Sort per row --> in their ordered intervals
-            @test (0.0 <= sorted[1,1] <= 0.5)
-            @test (0.5 <= sorted[1,2] <= 1.0)
+            sorted = sort(inds, dims = 2) # Sort per row --> in their ordered intervals
+            @test (0.0 <= sorted[1, 1] <= 0.5)
+            @test (0.5 <= sorted[1, 2] <= 1.0)
 
-            @test (2.0 <= sorted[2,1] <= 2.5)
-            @test (2.5 <= sorted[2,2] <= 3.0)
+            @test (2.0 <= sorted[2, 1] <= 2.5)
+            @test (2.5 <= sorted[2, 2] <= 3.0)
 
-            @test (4.0 <= sorted[3,1] <= 4.5)
-            @test (4.5 <= sorted[3,2] <= 5.0)
+            @test (4.0 <= sorted[3, 1] <= 4.5)
+            @test (4.5 <= sorted[3, 2] <= 5.0)
         end
 
         @testset "rand_individuals() unknown sampling method" begin
-            @test_throws ArgumentError rand_individuals(RectSearchSpace([(0.0, 1.0), (2.0, 3.0)]), 5, method=:simple)
+            @test_throws ArgumentError rand_individuals(RectSearchSpace([(0.0, 1.0), (2.0, 3.0)]), 5, method = :simple)
         end
     end
 
@@ -212,7 +212,7 @@
         end
 
         @testset "MixedPrecisionRectSearchSpace" begin
-            ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)], dimdigits=[-1, 2, 0])
+            ss = RectSearchSpace([(0.0, 1.0), (2.0, 3.0), (4.0, 5.0)], dimdigits = [-1, 2, 0])
 
             @test BlackBoxOptim.feasible([1.124, 2.001, 4.0], ss) == [1.0, 2.0, 4.0]
             @test BlackBoxOptim.feasible([0.124, 2.555, 3.9], ss) == [0.124, 2.56, 4.0]
@@ -240,7 +240,7 @@
         @test dimdigits(sscat) == fill(-1, 5)
 
         # concat continuous and mixed precision space
-        ss3 = RectSearchSpace([(6.0, 7.0), (8.0, 9.0), (10.0, 11.0)], dimdigits=[1, 0, -1])
+        ss3 = RectSearchSpace([(6.0, 7.0), (8.0, 9.0), (10.0, 11.0)], dimdigits = [1, 0, -1])
         sscat2 = vcat(ss1, ss3)
         @test sscat2 isa MixedPrecisionRectSearchSpace
         @test numdims(sscat2) == 6

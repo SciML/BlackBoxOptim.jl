@@ -8,8 +8,10 @@ rosenbrock2d(x) = abs2(1.0 - x[1]) + 100.0 * abs2(x[2] - x[1]^2)
 # to the optimizer, problem and params. Use the function
 # setup_bboptimize instead of bboptimize, but with the same
 # parameters. We just run it for 10 steps though:
-opt = bbsetup(rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
-    MaxSteps = 10, TraceMode = :silent);
+opt = bbsetup(
+    rosenbrock2d; SearchRange = (-5.0, 5.0), NumDimensions = 2,
+    MaxSteps = 10, TraceMode = :silent
+);
 
 # Now we can run it (this will do 10 steps):
 res10 = bboptimize(opt)

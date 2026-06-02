@@ -1,6 +1,6 @@
 const RSDefaultParameters = ParamsDict(
-    :PrecisionRatio    => 0.40, # 40% of the diameter is used as the initial step length
-    :PrecisionTreshold => 1e-6  # They use 1e-6 in the paper.
+    :PrecisionRatio => 0.4, # 40% of the diameter is used as the initial step length
+    :PrecisionTreshold => 1.0e-6  # They use 1e-6 in the paper.
 )
 
 """
@@ -19,7 +19,7 @@ and its close sibling "Resampling Inheritance Search" (RIS) is described in:
     F. Caraffini, F. Neri, B. N. Passow and G. Iacca, "Re-sampled Inheritance
     Search: High Performance Despite the Simplicity", 2013.
 """
-mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
+mutable struct ResamplingMemeticSearcher{E <: Evaluator} <: SteppingOptimizer
     name::String
     params::Parameters
     evaluator::E
@@ -32,41 +32,49 @@ mutable struct ResamplingMemeticSearcher{E<:Evaluator} <: SteppingOptimizer
     elite_fitness   # Fitness of current elite
 
     # Constructor for RS:
-    function ResamplingMemeticSearcher(evaluator::E, parameters::Parameters,
-            resampling_function::Function, name::String) where {E<:Evaluator}
+    function ResamplingMemeticSearcher(
+            evaluator::E, parameters::Parameters,
+            resampling_function::Function, name::String
+        ) where {E <: Evaluator}
         params = chain(RSDefaultParameters, parameters)
         elite = rand_individual(search_space(evaluator))
         diams = dimdelta(search_space(evaluator))
-        new{E}(name, params, evaluator, resampling_function,
-               params[:PrecisionRatio] * diams, diams,
-               elite, fitness(elite, evaluator))
+        return new{E}(
+            name, params, evaluator, resampling_function,
+            params[:PrecisionRatio] * diams, diams,
+            elite, fitness(elite, evaluator)
+        )
     end
 end
 
 function set_candidate!(o::ResamplingMemeticSearcher, x0)
     o.elite_fitness = fitness(x0, evaluator(o))
-    o.elite = x0
+    return o.elite = x0
 end
 candidate(o::ResamplingMemeticSearcher) = o.elite
 
 name(rs::ResamplingMemeticSearcher) = rs.name
 
 const RISDefaultParameters = ParamsDict(
-    :InheritanceRatio => 0.30   # On average, 30% of positions are inherited when resampling in RIS
+    :InheritanceRatio => 0.3   # On average, 30% of positions are inherited when resampling in RIS
 )
 
-ResamplingMemeticSearcher(problem::OptimizationProblem,
-        params::Parameters = EMPTY_PARAMS,
-        resampling_function = random_resample,
-        name = "Resampling Memetic Search (RS)") =
+ResamplingMemeticSearcher(
+    problem::OptimizationProblem,
+    params::Parameters = EMPTY_PARAMS,
+    resampling_function = random_resample,
+    name = "Resampling Memetic Search (RS)"
+) =
     ResamplingMemeticSearcher(ProblemEvaluator(problem), params, resampling_function, name)
 
 # Constructor for the RIS:
 ResamplingInheritanceMemeticSearcher(problem::OptimizationProblem, parameters::Parameters = EMPTY_PARAMS) =
-    ResamplingMemeticSearcher(problem,
-            chain(RSDefaultParameters, RISDefaultParameters, parameters),
-            random_resample_with_inheritance,
-            "Resampling Inheritance Memetic Search (RIS)")
+    ResamplingMemeticSearcher(
+    problem,
+    chain(RSDefaultParameters, RISDefaultParameters, parameters),
+    random_resample_with_inheritance,
+    "Resampling Inheritance Memetic Search (RIS)"
+)
 
 resampling_memetic_searcher(problem::OptimizationProblem, params::Parameters) =
     ResamplingMemeticSearcher(problem, params)
@@ -82,7 +90,7 @@ function random_resample_with_inheritance(rms::ResamplingMemeticSearcher)
     xt = random_resample(rms)
     n = numdims(rms.evaluator)
     i = rand(1:n)
-    Cr = 0.5^(1/(rms.params[:InheritanceRatio]*n)) # See equation 3 in the RIS paper
+    Cr = 0.5^(1 / (rms.params[:InheritanceRatio] * n)) # See equation 3 in the RIS paper
     k = 1
 
     while rand() <= Cr && k < n
@@ -160,7 +168,7 @@ function local_search(rms::ResamplingMemeticSearcher, xstart, fitness)
                 xt[i] = xs[i]
                 tfitness = last_fitness(rms.evaluator)
             else
-                xs[i] = xt[i] + ps[i]/2
+                xs[i] = xt[i] + ps[i] / 2
 
                 # rand bound from target if above max
                 if xs[i] > ssmaxs[i]

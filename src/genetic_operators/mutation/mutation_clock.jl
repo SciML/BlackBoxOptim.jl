@@ -17,10 +17,10 @@ end
 """
 Uniform mutation of a parameter vector.
 """
-struct UniformMutation{SS<:SearchSpace} <: GibbsMutationOperator
+struct UniformMutation{SS <: SearchSpace} <: GibbsMutationOperator
     search_space::SS
 
-    UniformMutation(ss::SS) where {SS<:SearchSpace} = new{SS}(ss)
+    UniformMutation(ss::SS) where {SS <: SearchSpace} = new{SS}(ss)
 end
 
 search_space(m::UniformMutation) = m.search_space
@@ -36,12 +36,12 @@ mutation. This is based on the paper:
     Deb and Deb (2012), "Analyzing Mutation Schemes for Real-Parameter Genetic Algorithms"
 but we use a Poisson distribution.
 """
-mutable struct MutationClock{S<:GibbsMutationOperator} <: MutationOperator
+mutable struct MutationClock{S <: GibbsMutationOperator} <: MutationOperator
     inner::S
     rate::Float64           # Probability to mutate a dimension
     nextVarToMutate::Int    # dimension index - 1
 
-    MutationClock(inner::S, rate::Float64 = 0.05) where {S<:GibbsMutationOperator} =
+    MutationClock(inner::S, rate::Float64 = 0.05) where {S <: GibbsMutationOperator} =
         new{S}(inner, rate, 1 + num_vars_to_next_mutation_point(rate))
 end
 

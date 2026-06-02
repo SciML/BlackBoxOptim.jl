@@ -8,7 +8,7 @@ size(t::TspLibProblem) = t.numcities
 
 function resetweights!(t::TspLibProblem, nc::Int)
     t.numcities = nc
-    t.weights = zeros(Float64, nc, nc)
+    return t.weights = zeros(Float64, nc, nc)
 end
 
 function cost(p::TspLibProblem, visitorder::Vector{Int})
@@ -59,12 +59,18 @@ function read_tsplib_file(filename)
     while lineindex < length(lines)
         lineindex += 1
         l = lines[lineindex]
-        whenmatch(m -> p.name = strip(m[1]), 
-            r"\s*NAME\s*:\s*(.+)$", l) && continue
-        whenmatch(m -> resetweights!(p, parse(Int, m[1])), 
-            r"\s*DIMENSION\s*:\s*(\d+)$", l) && continue
-        whenmatch(m -> lineindex = parse_edge_weights!(p, lines, lineindex+1), 
-            r"\s*EDGE_WEIGHT_SECTION\s*$", l)
+        whenmatch(
+            m -> p.name = strip(m[1]),
+            r"\s*NAME\s*:\s*(.+)$", l
+        ) && continue
+        whenmatch(
+            m -> resetweights!(p, parse(Int, m[1])),
+            r"\s*DIMENSION\s*:\s*(\d+)$", l
+        ) && continue
+        whenmatch(
+            m -> lineindex = parse_edge_weights!(p, lines, lineindex + 1),
+            r"\s*EDGE_WEIGHT_SECTION\s*$", l
+        )
     end
     return p
 end

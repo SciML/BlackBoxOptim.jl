@@ -1,15 +1,15 @@
 using BlackBoxOptim
 
 if length(ARGS) >= 1
-  maxtime = parse(Float64, ARGS[1])
+    maxtime = parse(Float64, ARGS[1])
 else
-  maxtime = 0.3 # Time used in original (flaky) tests...
+    maxtime = 0.3 # Time used in original (flaky) tests...
 end
 
 if length(ARGS) >= 2
-  N = parse(Int, ARGS[2])
+    N = parse(Int, ARGS[2])
 else
-  N = 30
+    N = 30
 end
 
 schaffer1(x) = (sumabs2(x), sumabs2(x .- 2.0))
@@ -21,32 +21,36 @@ totaltime = 0.0
 
 info("MaxTime=$maxtime, N_repeats=$N")
 while length(results1) < N
-  print("Optimization run $(length(results1)+1) of $N: ")
-  ctrl = bbsetup(schaffer1; Method = :borg_moea,
-    SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,
-    FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), ϵ=0.01)
-  tic()
-  @time res = bboptimize(ctrl, MaxTime = maxtime)
-  t = toq()
-  if isapprox(t, maxtime; rtol=0.01, atol=0.01)
-    totaltime += t
-    f = best_fitness(res)
-    push!(results1, f[1])
-    push!(results2, f[2])
-  else
-    # Ignore runs with large MaxTime deviation:
-    # usually initial runs have compilation hiccups (both BBO and GC)
-    @warn("Run ignored: large MaxTime deviation")
-  end
+    print("Optimization run $(length(results1) + 1) of $N: ")
+    ctrl = bbsetup(
+        schaffer1; Method = :borg_moea,
+        SearchRange = [(-10.0, 10.0), (-10.0, 10.0)], TraceMode = :silent,
+        FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true), ϵ = 0.01
+    )
+    tic()
+    @time res = bboptimize(ctrl, MaxTime = maxtime)
+    t = toq()
+    if isapprox(t, maxtime; rtol = 0.01, atol = 0.01)
+        totaltime += t
+        f = best_fitness(res)
+        push!(results1, f[1])
+        push!(results2, f[2])
+    else
+        # Ignore runs with large MaxTime deviation:
+        # usually initial runs have compilation hiccups (both BBO and GC)
+        @warn("Run ignored: large MaxTime deviation")
+    end
 end
 
 function report(vs, label, t = nothing)
-  r(x) = round(x, digits=3)
-  println(label, ": ", r(mean(vs)), " ± ", r(std(vs)),
-    " (", r(minimum(vs)), "-", r(maximum(vs)), ")")
-  if t != nothing
-    println("Time: ", r(t))
-  end
+    r(x) = round(x, digits = 3)
+    println(
+        label, ": ", r(mean(vs)), " ± ", r(std(vs)),
+        " (", r(minimum(vs)), "-", r(maximum(vs)), ")"
+    )
+    return if t != nothing
+        println("Time: ", r(t))
+    end
 end
 
 report(results1, "Fitness 1")

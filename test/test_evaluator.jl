@@ -39,7 +39,7 @@ function evaluator_tests(make_eval::Function)
         BlackBoxOptim.shutdown!(e)
     end
 
-    @testset "rank_by_fitness!()" begin
+    return @testset "rank_by_fitness!()" begin
         e = make_eval()
 
         candidates = [random_candidate(2, -1.0, 1.0) for i in 1:10]
@@ -55,11 +55,13 @@ function evaluator_tests(make_eval::Function)
 end
 
 function multiobj_evaluator_tests(make_eval::Function)
-    @testset "multi-objective problem" begin
+    return @testset "multi-objective problem" begin
         schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))
-        p = BlackBoxOptim.FunctionBasedProblem(schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing=true),
-                                               RectSearchSpace(5, (-10.0, 10.0)))
-        a = EpsBoxArchive(EpsBoxDominanceFitnessScheme(fitness_scheme(p)), max_size=100)
+        p = BlackBoxOptim.FunctionBasedProblem(
+            schaffer1, "Schaffer1", ParetoFitnessScheme{2}(is_minimizing = true),
+            RectSearchSpace(5, (-10.0, 10.0))
+        )
+        a = EpsBoxArchive(EpsBoxDominanceFitnessScheme(fitness_scheme(p)), max_size = 100)
 
         e = make_eval(p, a)
         fit1 = fitness([0.0, 1.0, 2.0, 3.0, 4.0], e)
@@ -98,7 +100,7 @@ end
     @testset "ParallelEvaluator" begin
         using Distributed
 
-        evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids=workers()))
+        evaluator_tests(() -> BlackBoxOptim.ParallelEvaluator(p, pids = workers()))
         multiobj_evaluator_tests((p, a) -> BlackBoxOptim.ParallelEvaluator(p, a))
     end
 

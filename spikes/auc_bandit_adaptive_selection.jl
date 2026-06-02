@@ -1,6 +1,6 @@
 # This is a general type for Adaptive selection based on Area-under-curve
 # multi-armed bandit as described in the paper:
-#   Francois-Michel De Rainville et al, "Sustainable Cooperative Coevolution 
+#   Francois-Michel De Rainville et al, "Sustainable Cooperative Coevolution
 #   with a Multi-Armed Bandit", 2013
 #
 
@@ -12,78 +12,78 @@ abstract type AdaptiveSelector end
 
 # The default AdaptiveSelector is a random selector.
 mutable struct RandomSelector <: AdaptiveSelector
-  item_map::Dict{Int, Any}
-  next_index::Int
+    item_map::Dict{Int, Any}
+    next_index::Int
 
-  RandomSelector(items = []) = begin
-    rs = new(Dict{Int, Any}(), 0)
-    add_items(rs, items)
-    rs
-  end
+    RandomSelector(items = []) = begin
+        rs = new(Dict{Int, Any}(), 0)
+        add_items(rs, items)
+        rs
+    end
 end
 
 # Returns an item map that maps from the indices of the current item set to
 # each item.
 function item_map(a::AdaptiveSelector)
-  a.item_map # Override this if you do not save the item map in an instance var
+    return a.item_map # Override this if you do not save the item map in an instance var
 end
 
 # Get next free index. Returns unique index number each time it is called.
 function get_next_free_index(a::AdaptiveSelector)
-  a.next_index += 1
+    return a.next_index += 1
 end
 
 # Add an item. Returns its index.
 function add_item(a::AdaptiveSelector, item)
-  index = get_next_free_index(a)
-  item_map(a)[index] = item
-  index
+    index = get_next_free_index(a)
+    item_map(a)[index] = item
+    return index
 end
 
 function add_items(a::AdaptiveSelector, items)
-  [add_item(a, item) for item in items]
+    return [add_item(a, item) for item in items]
 end
 
 # Remove an item given its index.
 function remove_item_with_index(a::AdaptiveSelector, item_index::Int)
-  delete!(a.item_map, item_index)
+    return delete!(a.item_map, item_index)
 end
 
 # Remove an item.
 function remove_item(a::AdaptiveSelector, item)
-  not_equals_item = (k,v) -> v != item
-  filter!( not_equals_item, a.item_map )
+    not_equals_item = (k, v) -> v != item
+    return filter!(not_equals_item, a.item_map)
 end
 
 
 # Select one item in the set of things that we select from. Returns both its
 # index and itself / its value.
 function select(a::AdaptiveSelector)
-  ks = keys(a.item_map)
-  randkey = ks[rand(1:length(ks))]
-  a.item_map[randkey]
+    ks = keys(a.item_map)
+    randkey = ks[rand(1:length(ks))]
+    return a.item_map[randkey]
 end
 
 # Add reward for one item given its index. Default is to not do anything since
 # the default selector is a random selector that need not care about rewards.
-# A reward should be a positive value with larger values indicating more 
+# A reward should be a positive value with larger values indicating more
 # benefit when using the item.
 function reward(a::AdaptiveSelector, index, reward)
-  # Override for selectors that use rewards.
+    # Override for selectors that use rewards.
 end
 
 # We need a queue of fixed size to keep info about recent rewards.
 mutable struct FixedSizeQueue
-  queue::Array{Any,1}
-  size::Int
-  maxsize::Int
-  index::Int
+    queue::Array{Any, 1}
+    size::Int
+    maxsize::Int
+    index::Int
 
-  FixedSizeQueue(maxsize) = begin
-    q = Any[]
-    [Base.push!(q, 0) for i in 1:maxsize]
-    new(q, 0, maxsize, 0)
-  end
+    FixedSizeQueue(maxsize) = begin
+        q = Any[]
+        [Base.push!(q, 0) for i in 1:maxsize]
+        new(q, 0, maxsize, 0)
+    end
 end
 
 size(fsq::FixedSizeQueue) = fsq.size
@@ -91,17 +91,17 @@ maxsize(fsq::FixedSizeQueue) = fsq.maxsize
 is_full(fsq::FixedSizeQueue) = fsq.size == fsq.maxsize
 
 function push!(fsq::FixedSizeQueue, item)
-  fsq.queue[fsq.index + 1] = item
-  fsq.index = mod(fsq.index + 1, fsq.maxsize)
-  fsq.size = min(fsq.maxsize, fsq.size + 1)
+    fsq.queue[fsq.index + 1] = item
+    fsq.index = mod(fsq.index + 1, fsq.maxsize)
+    return fsq.size = min(fsq.maxsize, fsq.size + 1)
 end
 
 function as_vector(fsq::FixedSizeQueue)
-  v = Any[]
-  for elem = fsq
-    push!(v, elem)
-  end
-  v
+    v = Any[]
+    for elem in fsq
+        push!(v, elem)
+    end
+    return v
 end
 
 ##############
@@ -113,107 +113,112 @@ Base.start(fsq::FixedSizeQueue) = (fsq.size, mod(fsq.index - fsq.size, fsq.maxsi
 Base.done(fsq::FixedSizeQueue, state) = state[1] == 0
 
 function Base.next(fsq::FixedSizeQueue, state)
-  elem = fsq.queue[state[2] + 1]
-  return elem, (state[1]-1, mod(state[2]+1, fsq.maxsize))
+    elem = fsq.queue[state[2] + 1]
+    return elem, (state[1] - 1, mod(state[2] + 1, fsq.maxsize))
 end
 
 
 mutable struct AucBanditSelector <: AdaptiveSelector
-  window::FixedSizeQueue  # Window of latest (itemindex, reward) pairs
-  ns::Int[]             # Number of times each item has been used within the current window.
-  items::Any[]
-  next_index::Int
-  decay_factor::Float64
-  exploration_factor::Float64
+    window::FixedSizeQueue  # Window of latest (itemindex, reward) pairs
+    ns::Int[]             # Number of times each item has been used within the current window.
+    items::Any[]
+    next_index::Int
+    decay_factor::Float64
+    exploration_factor::Float64
 
-  AucBanditSelector(items = []; window_size = 50, decay_factor = 1.0,
-    exploration_factor = 1.0) = begin
+    AucBanditSelector(
+        items = []; window_size = 50, decay_factor = 1.0,
+        exploration_factor = 1.0
+    ) = begin
 
-    aucb = new(FixedSizeQueue(window_size), Int[], Any[], 0, 
-      decay_factor, exploration_factor)
+        aucb = new(
+            FixedSizeQueue(window_size), Int[], Any[], 0,
+            decay_factor, exploration_factor
+        )
 
-    add_items(aucb, items)
+        add_items(aucb, items)
 
-    aucb
+        aucb
 
-  end
+    end
 end
 
 function add_item(a::AucBanditSelector, item)
-  push!(a.ns, 0) # Add a zero to indicate how often it has been used => none!
-  push!(a.items, item)
-  length(a.items)
+    push!(a.ns, 0) # Add a zero to indicate how often it has been used => none!
+    push!(a.items, item)
+    return length(a.items)
 end
 
 # Remove an item given its index.
 function remove_item_with_index(a::AucBanditSelector, item_index::Int)
-  splice!(a.items, item_index)
-  splice!(a.ns, item_index)
+    splice!(a.items, item_index)
+    return splice!(a.ns, item_index)
 end
 
 # Remove an item.
 function remove_item(a::AucBanditSelector, item)
-  for i in 1:length(a.items)
-    if a.items[i] == item
-      remove_item_with_index(a, i)
-      return i
+    for i in 1:length(a.items)
+        if a.items[i] == item
+            remove_item_with_index(a, i)
+            return i
+        end
     end
-  end
+    return
 end
 
 function reward(a::AucBanditSelector, index, reward)
-  # Update the ns counts by subtracting one from the one that is about the exit 
-  # the window.
-  if is_full(a.window)
-    (index, reward) = first(a.window)
-    a.ns[index] -= 1
-  end
-  push!(a.window, (index, reward))
-  a.ns[index] += 1
+    # Update the ns counts by subtracting one from the one that is about the exit
+    # the window.
+    if is_full(a.window)
+        (index, reward) = first(a.window)
+        a.ns[index] -= 1
+    end
+    push!(a.window, (index, reward))
+    return a.ns[index] += 1
 end
 
 function select(a::AucBanditSelector)
-  unused = a.ns == 0
-  if any(unusued)
-    # Randomly select one of the unused
-    indices_to_unused = collect(1:length(a.ns))[unused]
-    indices_to_unused[rand(1:length(indices_to_unused))]
-  else 
-    # Select via the multi-armed bandit formula
-    qs = calc_quality_values(a)
-    vs = qs + a.exploration_factor * sqrt( 2 * log(sum(a.ns)) * (1 / a.ns) )
-    items[argmin(vs)]
-  end
+    unused = a.ns == 0
+    return if any(unusued)
+        # Randomly select one of the unused
+        indices_to_unused = collect(1:length(a.ns))[unused]
+        indices_to_unused[rand(1:length(indices_to_unused))]
+    else
+        # Select via the multi-armed bandit formula
+        qs = calc_quality_values(a)
+        vs = qs + a.exploration_factor * sqrt(2 * log(sum(a.ns)) * (1 / a.ns))
+        items[argmin(vs)]
+    end
 end
 
 function calc_quality_values(a:AucBanditSelector)
-  qs = zeros(length(a.ns))
-  for i in 1:length(a.ns)
-    qs[i] = area_under_curve_credit_assignment(a, i)
-  end
-  qs
+    qs = zeros(length(a.ns))
+    for i in 1:length(a.ns)
+        qs[i] = area_under_curve_credit_assignment(a, i)
+    end
+    return qs
 end
 
 function sort_window(a::AucBanditSelector)
-  sort(as_vector(a.window), by = (index, reward) -> reward, rev = true)
+    return sort(as_vector(a.window), by = (index, reward) -> reward, rev = true)
 end
 
-# We should extend this to calculate all credits in one go instead of sorting 
+# We should extend this to calculate all credits in one go instead of sorting
 # and looping for each index...
 function area_under_curve_credit_assignment(a::AucBanditSelector, index)
-  sorted_window = sort_window(a)
-  wlength = length(sorted_window)
-  y = q = 0.0
-  rank = 1
-  for (j, reward) in sorted_window
-    # The AUC bandit skips the actual reward values and relies only on rank...
-    reward = a.decay_factor^(rank-1) * (wlength - (rank - 1))
-    if index == j
-      y += reward
-    else
-      q += (y*reward)
+    sorted_window = sort_window(a)
+    wlength = length(sorted_window)
+    y = q = 0.0
+    rank = 1
+    for (j, reward) in sorted_window
+        # The AUC bandit skips the actual reward values and relies only on rank...
+        reward = a.decay_factor^(rank - 1) * (wlength - (rank - 1))
+        if index == j
+            y += reward
+        else
+            q += (y * reward)
+        end
+        rank += 1
     end
-    rank += 1
-  end
-  q
+    return q
 end

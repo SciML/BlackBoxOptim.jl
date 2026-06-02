@@ -7,22 +7,24 @@ struct FixedGeneticOperatorsMixture <: GeneticOperatorsMixture
     weights::Weights{Float64, Float64, Vector{Float64}}  # fixed weights
 
     function FixedGeneticOperatorsMixture(
-        operators::AbstractVector{<:GeneticOperator},
-        rates::AbstractVector{Float64} = fill(1.0/length(operators), length(operators)) # defaults to uniform distribution of rates
-    )
+            operators::AbstractVector{<:GeneticOperator},
+            rates::AbstractVector{Float64} = fill(1.0 / length(operators), length(operators)) # defaults to uniform distribution of rates
+        )
         length(operators) == length(rates) ||
             throw(DimensionMismatch("Number of mutators does not match the number of their rates"))
-        new(GeneticOperator[op for op in operators], weights(rates))
+        return new(GeneticOperator[op for op in operators], weights(rates))
     end
 end
 
 """
 Default implementation of `apply!()` for operators mixture.
 """
-function apply!(opmix::GeneticOperatorsMixture,
-                v::AbstractVector{<:Real}, target_index::Int)
+function apply!(
+        opmix::GeneticOperatorsMixture,
+        v::AbstractVector{<:Real}, target_index::Int
+    )
     op, tag = next(opmix)
-    apply!(op, v, target_index)
+    return apply!(op, v, target_index)
 end
 
 """
@@ -48,10 +50,14 @@ struct FAGeneticOperatorsMixture <: GeneticOperatorsMixture
 
     FAGeneticOperatorsMixture(
         operators::AbstractVector{<:GeneticOperator};
-        c = 1E-2, eta = 1E-2, pmin = 0.01, pmax = 1.0
-    ) = new(GeneticOperator[op for op in operators],
-            FrequencyAdapter(length(operators);
-                             c = c, eta = eta, pmin = pmin, pmax = pmax))
+        c = 1.0e-2, eta = 1.0e-2, pmin = 0.01, pmax = 1.0
+    ) = new(
+        GeneticOperator[op for op in operators],
+        FrequencyAdapter(
+            length(operators);
+            c = c, eta = eta, pmin = pmin, pmax = pmax
+        )
+    )
 end
 
 frequencies(opmix::FAGeneticOperatorsMixture) = frequencies(opmix.fa)
@@ -61,14 +67,16 @@ function next(opmix::FAGeneticOperatorsMixture)
     return opmix.operators[i], i
 end
 
-function adjust!(opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::Int,
-                 new_fitness::F, old_fitness::F, is_improved::Bool) where F
+function adjust!(
+        opmix::FAGeneticOperatorsMixture, op_index::Int, candi_index::Int,
+        new_fitness::F, old_fitness::F, is_improved::Bool
+    ) where {F}
     # KLUDGE we don't know the fitness scheme, but if there is no improvement in fitness,
     # new_fitness==old_fitness, so it's ok to take the abs()
-    update!(opmix.fa, op_index, is_improved ? abs(new_fitness-old_fitness) : 0.0)
+    update!(opmix.fa, op_index, is_improved ? abs(new_fitness - old_fitness) : 0.0)
 
     # also adjust the actual operator
-    adjust!(opmix.operators[op_index], 0, candi_index, new_fitness, old_fitness, is_improved)
+    return adjust!(opmix.operators[op_index], 0, candi_index, new_fitness, old_fitness, is_improved)
 end
 
 # FIXME use logging
@@ -79,5 +87,5 @@ function trace_state(io::IO, fa::FAGeneticOperatorsMixture, mode::Symbol)
             @printf(io, " %s=%.2f", typeof(fa.operators[i]), fa.fa.p[i])
         end
     end
-    println(io)
+    return println(io)
 end

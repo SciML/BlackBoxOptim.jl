@@ -10,8 +10,8 @@ using Printf: @sprintf
 
 global logfilehandle = nothing
 function log(color::Symbol, str)
-    printstyled(str, color=color)
-    if logfilehandle != nothing
+    printstyled(str, color = color)
+    return if logfilehandle != nothing
         print(logfilehandle, str)
         flush(logfilehandle)
     end
@@ -24,7 +24,8 @@ function main(args)
     global logfilehandle
     logfilehandle = open(Libc.strftime("%Y%m%d_%H%M%S.log", start_time), "a+")
 
-    s = ArgParseSettings(description = "comparing optimizers to benchmark runs",
+    s = ArgParseSettings(
+        description = "comparing optimizers to benchmark runs",
         commands_are_required = true,
         version = "0.1.0",
         add_version = true
@@ -32,63 +33,63 @@ function main(args)
 
     @add_arg_table s begin
         "update"
-            action = :command
-            help = "update benchmark runs"
+        action = :command
+        help = "update benchmark runs"
 
         "list"
-            action = :command
-            help = "list info about benchmark runs"
+        action = :command
+        help = "list info about benchmark runs"
 
         "compare"
-            action = :command
-            help = "compare current optimizer(s) to benchmark runs"
+        action = :command
+        help = "compare current optimizer(s) to benchmark runs"
     end
 
     for cmd in ["update", "compare", "list"]
         @add_arg_table s[cmd] begin
             "--benchmarkfile", "-b"
-                arg_type = AbstractString
-                default = "benchmark_runs.csv"
-                help = "name of benchmark runs db file"
+            arg_type = AbstractString
+            default = "benchmark_runs.csv"
+            help = "name of benchmark runs db file"
         end
     end
 
     for cmd in ["update", "compare"]
         @add_arg_table s[cmd] begin
-           "--problems"
-                arg_type = AbstractString
-                default = "all"
-                help = "name of problem set"
+            "--problems"
+            arg_type = AbstractString
+            default = "all"
+            help = "name of problem set"
 
             "--optimizers"
-                arg_type = AbstractString
-                default = "stable"
-                help = "name of optimizer or optimizer set"
+            arg_type = AbstractString
+            default = "stable"
+            help = "name of optimizer or optimizer set"
 
             "--numreps", "-n"
-                arg_type = Int
-                default = 10
-                help = "number of repetitions per problem and optimizer"
+            arg_type = Int
+            default = 10
+            help = "number of repetitions per problem and optimizer"
 
             "--adaptive"
-                action = :store_true
-                help = "adaptive number of reps until we can prove there is a difference (with a max of 30 reps)"
+            action = :store_true
+            help = "adaptive number of reps until we can prove there is a difference (with a max of 30 reps)"
         end
     end
 
     @add_arg_table s["compare"] begin
         "--comparisonfile"
-            arg_type = AbstractString
-            default = ""
-            help = "name of comparison db file"
-        end
+        arg_type = AbstractString
+        default = ""
+        help = "name of comparison db file"
+    end
 
     @add_arg_table s["list"] begin
         "--outfile", "-o"
-            arg_type = AbstractString
-            default = ""
-            help = "name of csv file where result comparison table is saved"
-        end
+        arg_type = AbstractString
+        default = ""
+        help = "name of csv file where result comparison table is saved"
+    end
 
     pargs = parse_args(args, s)
 
@@ -124,82 +125,84 @@ function main(args)
         db = read_benchmark_db(benchmarkfile)
         list_benchmark_db(db, pargs[cmd]["outfile"])
     elseif cmd == "compare"
-        compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps, 0.01,
-                pargs[cmd]["comparisonfile"])
+        compare_optimizers_to_benchmarks(
+            benchmarkfile, pset, optimizers, nreps, 0.01,
+            pargs[cmd]["comparisonfile"]
+        )
     else
         raise("Unknown command") # FIXME logfilehandle is not closed
     end
 
     close(logfilehandle)
 
-    println("elapsed time:    ", format_time(time() - start_time))
+    return println("elapsed time:    ", format_time(time() - start_time))
 end
 
 function format_time(t)
-    if t < 60.0
+    return if t < 60.0
         @sprintf("%.1f secs", t)
     elseif t < 3600.0
-        m = floor(Int, t/60.0)
-        @sprintf("%d min%s ", m, (m>1) ? "s" : "") * format_time(t - 60*m)
+        m = floor(Int, t / 60.0)
+        @sprintf("%d min%s ", m, (m > 1) ? "s" : "") * format_time(t - 60 * m)
     else
-        h = floor(Int, t/3600.0)
-        @sprintf("%d hour%s ", h, (h>1) ? "s" : "") * format_time(t - 3600*h)
+        h = floor(Int, t / 3600.0)
+        @sprintf("%d hour%s ", h, (h > 1) ? "s" : "") * format_time(t - 3600 * h)
     end
 end
 
-ProblemSets = Dict{String,Any}(
+ProblemSets = Dict{String, Any}(
     "easy" => [
         # ProblemName, NumDims, PopSize, MaxFevals
-        ("Sphere",        5, 20, 5e3),
-        ("Sphere",       10, 20, 1e4),
-        ("Sphere",       30, 20, 3e4),
+        ("Sphere", 5, 20, 5.0e3),
+        ("Sphere", 10, 20, 1.0e4),
+        ("Sphere", 30, 20, 3.0e4),
 
-        ("Schwefel2.22",  5, 20, 5e3),
-        ("Schwefel2.22", 10, 20, 1e4),
-        ("Schwefel2.22", 30, 20, 3e4),
+        ("Schwefel2.22", 5, 20, 5.0e3),
+        ("Schwefel2.22", 10, 20, 1.0e4),
+        ("Schwefel2.22", 30, 20, 3.0e4),
 
-        ("Schwefel2.21",  5, 20, 5e3),
-        ("Schwefel2.21", 10, 20, 1e4),
-        ("Schwefel2.21", 30, 20, 3e4)
+        ("Schwefel2.21", 5, 20, 5.0e3),
+        ("Schwefel2.21", 10, 20, 1.0e4),
+        ("Schwefel2.21", 30, 20, 3.0e4),
     ],
 
     "harder" => [
         # Harder problems
-        ("Schwefel1.2",   5, 20, 5e3),
-        ("Schwefel1.2",  10, 50, 5e4),
-        ("Schwefel1.2",  30, 50, 2e5),
-        ("Schwefel1.2",  50, 50, 3e5),
+        ("Schwefel1.2", 5, 20, 5.0e3),
+        ("Schwefel1.2", 10, 50, 5.0e4),
+        ("Schwefel1.2", 30, 50, 2.0e5),
+        ("Schwefel1.2", 50, 50, 3.0e5),
 
-        ("Rosenbrock",    5, 20, 1e4),
-        ("Rosenbrock",   10, 50, 5e4),
-        ("Rosenbrock",   30, 50, 2e5),
-        ("Rosenbrock",   50, 40, 3e5),
+        ("Rosenbrock", 5, 20, 1.0e4),
+        ("Rosenbrock", 10, 50, 5.0e4),
+        ("Rosenbrock", 30, 50, 2.0e5),
+        ("Rosenbrock", 50, 40, 3.0e5),
 
-        ("Rastrigin",    50, 50, 5e5),
-        ("Rastrigin",   100, 90, 8e5),
+        ("Rastrigin", 50, 50, 5.0e5),
+        ("Rastrigin", 100, 90, 8.0e5),
 
-        ("Ackley",       50, 50, 5e5),
-        ("Ackley",      100, 90, 8e5),
+        ("Ackley", 50, 50, 5.0e5),
+        ("Ackley", 100, 90, 8.0e5),
 
-        ("Griewank",     50, 50, 5e5),
-        ("Griewank",    100, 90, 8e5),
+        ("Griewank", 50, 50, 5.0e5),
+        ("Griewank", 100, 90, 8.0e5),
     ],
 
     "lowdim" => [
-        ("Schwefel1.2",   2, 25, 1e4),
-        ("Rosenbrock",    2, 25, 1e4),
-        ("Rastrigin",     2, 25, 1e4),
-        ("Ackley",        2, 25, 1e4),
-        ("Griewank",      2, 25, 1e4),
+        ("Schwefel1.2", 2, 25, 1.0e4),
+        ("Rosenbrock", 2, 25, 1.0e4),
+        ("Rastrigin", 2, 25, 1.0e4),
+        ("Ackley", 2, 25, 1.0e4),
+        ("Griewank", 2, 25, 1.0e4),
     ],
 
     "test" => [
-        ("Rosenbrock",   30, 50, 2e5),
+        ("Rosenbrock", 30, 50, 2.0e5),
     ]
 )
 ProblemSets["all"] = vcat(ProblemSets["easy"], ProblemSets["harder"])
 
-OptimizerSets = Dict{String,Any}(
+OptimizerSets = Dict{String, Any}(
     "de" => [:de_rand_1_bin, :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin, :adaptive_de_rand_1_bin_radiuslimited],
     "stable_non_de" => [:probabilistic_descent, :generating_set_search, :random_search],
     "nes" => [:xnes, :separable_nes, :dxnes],
@@ -210,32 +213,35 @@ OptimizerSets["stable"] = vcat(OptimizerSets["de"], OptimizerSets["stable_non_de
 
 # Keep track of how many times we have executed each problem for this run of the script,
 # since we should never take time measurements before we have ensured everything has been compiled.
-const RunsPerProblem = Dict{Any,Int}()
+const RunsPerProblem = Dict{Any, Int}()
 runs_per_problem(problemname, numdims) = get(RunsPerProblem, (problemname, numdims), 0)
 function increase_runs_per_problem(problemname, numdims)
     k = (problemname, numdims)
-    RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
+    return RunsPerProblem[k] = get(RunsPerProblem, k, 0) + 1
 end
 
-function fitness_for_opt(family::FunctionBasedProblemFamily, NumDimensions::Int,
-                         PopulationSize::Int, MaxFuncEvals::Int,
-                         Method::Symbol, TraceMode::Symbol = :verbose)
+function fitness_for_opt(
+        family::FunctionBasedProblemFamily, NumDimensions::Int,
+        PopulationSize::Int, MaxFuncEvals::Int,
+        Method::Symbol, TraceMode::Symbol = :verbose
+    )
 
     problem = instantiate(family, NumDimensions)
 
     CPUtic()
-    res = bboptimize(problem; Method = Method,
+    res = bboptimize(
+        problem; Method = Method,
         NumDimensions = NumDimensions,
         PopulationSize = PopulationSize,
         TraceMode = TraceMode,
         MaxFuncEvals = MaxFuncEvals
     )
 
-    best_fitness(res), CPUtoc()
+    return best_fitness(res), CPUtoc()
 end
 
 function latest_git_id(git_repo = joinpath(@__DIR__, "../.."))
-    strip(read(`git -C $git_repo log --format="%H" -n 1`, String))
+    return strip(read(`git -C $git_repo log --format="%H" -n 1`, String))
 end
 
 # Test an optimizer on multiple problems and dimensions, return results in dict.
@@ -257,10 +263,11 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
                 increase_runs_per_problem(probname, numdims)
             end
 
-            df = DataFrame(Problem = probname, NumDims = numdims,
-                    Method = string(method), PopulationSize = popsize,
-                    NumFevals = numfevals,
-                    GitID = gitid
+            df = DataFrame(
+                Problem = probname, NumDims = numdims,
+                Method = string(method), PopulationSize = popsize,
+                NumFevals = numfevals,
+                GitID = gitid
             )
 
             log("\n$(probname), n = $(numdims), optimizer = $(string(method)), run $(rep) of $(NumRepetitions)\n")
@@ -275,7 +282,7 @@ function multitest_opt(problemDescriptions, method; NumRepetitions = 3)
         end
     end
 
-    vcat(dfs...)
+    return vcat(dfs...)
 end
 
 using CSV
@@ -291,9 +298,9 @@ end
 
 function add_rank_per_group(df, groupcols, rankcol, resultcol)
     gdf = groupby(df, groupcols)
-    combine(gdf) do subdf
+    return combine(gdf) do subdf
         ordered = subdf[sortperm(subdf[:, rankcol]), :]
-        ordered[!, resultcol] = collect(1:size(ordered,1))
+        ordered[!, resultcol] = collect(1:size(ordered, 1))
         return ordered
     end
 end
@@ -302,7 +309,7 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
     numrows = size(db, 1)
     println("Number of runs in db: ", numrows)
 
-    if numrows > 1
+    return if numrows > 1
         # Find min fitness per problem
         minfitpp = combine(groupby(db, [:Problem, :NumDims])) do df
             DataFrame(MinFitness = minimum(df.Fitness))
@@ -314,9 +321,11 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
 
         # Calc median fitness and time per problem and method.
         sumdf = combine(groupby(db, [:Problem, :NumDims, :Method])) do df
-            DataFrame(N = size(df, 1),
-                      MedianFitness = median(df.Fitness),
-                      MedianTime = median(df.ElapsedTime))
+            DataFrame(
+                N = size(df, 1),
+                MedianFitness = median(df.Fitness),
+                MedianTime = median(df.ElapsedTime)
+            )
         end
 
         # Rank on median fitness and median time for each problem.
@@ -327,7 +336,7 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
         permethod = combine(groupby(db, [:Method])) do df
             DataFrame(
                 NumRuns = size(df, 1),
-                MedianLogTimesWorseFitness = round(median(df.LogTimesWorseFitness), digits=1)
+                MedianLogTimesWorseFitness = round(median(df.LogTimesWorseFitness), digits = 1)
             )
         end
 
@@ -336,9 +345,9 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
             rfs = df.RankFitness
             rts = df.RankTime
             DataFrame(
-                MeanRank = round(mean(rfs), digits=3),
+                MeanRank = round(mean(rfs), digits = 3),
                 Num1sFitness = sum(r -> (r == 1) ? 1 : 0, rfs),
-                MeanRankTime = round(mean(rts), digits=3),
+                MeanRankTime = round(mean(rts), digits = 3),
                 Num1sTime = sum(r -> (r == 1) ? 1 : 0, rts),
             )
         end
@@ -355,7 +364,7 @@ function list_benchmark_db(db, saveResultCsvFile = nothing)
 end
 
 function save_result_database(db, filename)
-    CSV.write(filename, db)
+    return CSV.write(filename, db)
 end
 
 function update_benchmarks(db, pset, optimizers, nreps = 10)
@@ -374,8 +383,10 @@ end
 
 using HypothesisTests
 
-function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps,
-    significancelevel::Float64 = 0.05, comparisonfile = "")
+function compare_optimizers_to_benchmarks(
+        benchmarkfile, pset, optimizers, nreps,
+        significancelevel::Float64 = 0.05, comparisonfile = ""
+    )
     if comparisonfile == ""
         db = read_benchmark_db(benchmarkfile)
         dfs = DataFrame[]
@@ -395,7 +406,7 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                 prob = BlackBoxOptim.example_problems[probname]
                 for r in 1:nreps
                     runnum += 1
-                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, digits=2))% of total runs)\n")
+                    log("\n$(probname), n = $(numdims), optimizer = $(string(optmethod)), run $(r) of $(nreps) ($(round(100.0 * runnum / totalruns, digits = 2))% of total runs)\n")
                     ftn, dur = fitness_for_opt(prob, numdims, popsize, ceil(Int, numfevals), optmethod)
                     push!(newfs, ftn)
                     push!(newtimes, dur)
@@ -425,12 +436,14 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
                     log(time_ord == "<" ? :red : :green, "  Statistically significant time difference in $nreps repetitions (P-value=$time_pval)!\n")
                 end
 
-                push!(dfs, DataFrame(
-                    Problem = probname, NumDims = numdims, Method = string(optmethod), PvalueThreshold = significancelevel,
-                    FitnessOldMedian = ftn_oldmed, FitnessOrder = ftn_ord, FitnessNewMedian = ftn_newmed,
-                    FitnessPvalue = ftn_pval, FitnessIsSignif = ftn_pval <= significancelevel,
-                    TimeOldMedian = time_oldmed, TimeOrder = time_ord, TimeNewMedian = time_newmed,
-                    TimePvalue = time_pval, TimeIsSignif = time_pval <= significancelevel)
+                push!(
+                    dfs, DataFrame(
+                        Problem = probname, NumDims = numdims, Method = string(optmethod), PvalueThreshold = significancelevel,
+                        FitnessOldMedian = ftn_oldmed, FitnessOrder = ftn_ord, FitnessNewMedian = ftn_newmed,
+                        FitnessPvalue = ftn_pval, FitnessIsSignif = ftn_pval <= significancelevel,
+                        TimeOldMedian = time_oldmed, TimeOrder = time_ord, TimeNewMedian = time_newmed,
+                        TimePvalue = time_pval, TimeIsSignif = time_pval <= significancelevel
+                    )
                 )
             end
         end
@@ -441,39 +454,47 @@ function compare_optimizers_to_benchmarks(benchmarkfile, pset, optimizers, nreps
         ftn_pvs = convert(Vector{Float64}, df.FitnessPvalue)
         df[!, :FitnessSignificantBH001] = benjamini_hochberg(ftn_pvs, 0.01)
         df[!, :FitnessSignificantBH005] = benjamini_hochberg(ftn_pvs, 0.05)
-        df[!, :FitnessSignificantBH010] = benjamini_hochberg(ftn_pvs, 0.10)
+        df[!, :FitnessSignificantBH010] = benjamini_hochberg(ftn_pvs, 0.1)
 
         time_pvs = convert(Vector{Float64}, df.TimePvalue)
         df[!, :TimeSignificantBH001] = benjamini_hochberg(time_pvs, 0.01)
         df[!, :TimeSignificantBH005] = benjamini_hochberg(time_pvs, 0.05)
-        df[!, :TimeSignificantBH010] = benjamini_hochberg(time_pvs, 0.10)
+        df[!, :TimeSignificantBH010] = benjamini_hochberg(time_pvs, 0.1)
 
         CSV.write(Libc.strftime("comparison_%Y%m%d_%H%M%S.csv", time()), df)
     else
         df = CSV.read(comparisonfile, DataFrame)
     end
     sort!(df, [:FitnessPvalue])
-    report_below_pvalue(df, col_prefix="Fitness", pvalue=1.00)
-    report_below_pvalue(df, col_prefix="Fitness", pvalue=0.05)
-    report_below_pvalue(df, col_prefix="Fitness", pvalue=0.01)
-    report_below_pvalue(df, col_prefix="Time", pvalue=1.00)
-    report_below_pvalue(df, col_prefix="Time", pvalue=0.05)
-    report_below_pvalue(df, col_prefix="Time", pvalue=0.01)
+    report_below_pvalue(df, col_prefix = "Fitness", pvalue = 1.0)
+    report_below_pvalue(df, col_prefix = "Fitness", pvalue = 0.05)
+    report_below_pvalue(df, col_prefix = "Fitness", pvalue = 0.01)
+    report_below_pvalue(df, col_prefix = "Time", pvalue = 1.0)
+    report_below_pvalue(df, col_prefix = "Time", pvalue = 0.05)
+    report_below_pvalue(df, col_prefix = "Time", pvalue = 0.01)
 
     # Report (in color) on number of significant differences after Benjamini-Hochberg
     # correction.
     n_ftn_reg = sum(df.FitnessSignificantBH005 .& (df.FitnessOrder .== "<"))
     n_ftn_imp = sum(df.FitnessSignificantBH005 .& (df.FitnessOrder .== ">"))
-    printstyled("\n$n_ftn_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
-                color=n_ftn_reg > 0 ? :red : :green)
-    printstyled("\n$n_ftn_imp significant fitness improvements at Benjamini-Hochberg 0.05 level\n",
-                color=n_ftn_imp > 0 ? :green : :white)
+    printstyled(
+        "\n$n_ftn_reg significant fitness regressions at Benjamini-Hochberg 0.05 level\n",
+        color = n_ftn_reg > 0 ? :red : :green
+    )
+    printstyled(
+        "\n$n_ftn_imp significant fitness improvements at Benjamini-Hochberg 0.05 level\n",
+        color = n_ftn_imp > 0 ? :green : :white
+    )
     n_time_reg = sum(df.TimeSignificantBH005 .& (df.TimeOrder .== "<"))
     n_time_imp = sum(df.TimeSignificantBH005 .& (df.TimeOrder .== ">"))
-    printstyled("\n$n_time_reg significant time regressions at Benjamini-Hochberg 0.05 level\n",
-                color=n_time_reg > 0 ? :red : :green)
-    printstyled("\n$n_time_imp significant time improvements at Benjamini-Hochberg 0.05 level\n",
-                color=n_time_imp > 0 ? :green : :white)
+    printstyled(
+        "\n$n_time_reg significant time regressions at Benjamini-Hochberg 0.05 level\n",
+        color = n_time_reg > 0 ? :red : :green
+    )
+    return printstyled(
+        "\n$n_time_imp significant time improvements at Benjamini-Hochberg 0.05 level\n",
+        color = n_time_imp > 0 ? :green : :white
+    )
 end
 
 function benjamini_hochberg(pvals, alpha = 0.05)
@@ -487,11 +508,11 @@ function benjamini_hochberg(pvals, alpha = 0.05)
     khat = findlast(i -> pvals[perm[i]] < thresholds[i], 1:n)
     (khat === nothing) && return fill(false, n) # There were no significant pvals so return all false
 
-    significant = vcat(fill(true, khat), fill(false, n-khat))
+    significant = vcat(fill(true, khat), fill(false, n - khat))
     return significant[origperm]
 end
 
-function report_below_pvalue(df; col_prefix="Fitness", pvalue = 0.05)
+function report_below_pvalue(df; col_prefix = "Fitness", pvalue = 0.05)
     selection = df[:, Symbol(col_prefix, "Pvalue")] .< pvalue
     log("Num problems with $col_prefix p-values < $(pvalue): $(sum(selection))\n")
     # workaround sum(isequal, []) throws
@@ -500,7 +521,7 @@ function report_below_pvalue(df; col_prefix="Fitness", pvalue = 0.05)
     log_color = num_new_better > num_new_worse ? :green : :red
     log(log_color, "  $col_prefix is better in current run in $(num_new_better) tests\n")
     log(log_color, "  $col_prefix is worse in current run in $(num_new_worse) tests\n")
-    any(selection) && println(df[selection, :])
+    return any(selection) && println(df[selection, :])
 end
 
 @CPUtime main(ARGS)

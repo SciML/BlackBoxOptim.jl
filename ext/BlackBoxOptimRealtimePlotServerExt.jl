@@ -41,10 +41,12 @@ const VegaLiteWebsocketFrontEndTemplate = """
 rand_websocket_port() = 9000 + rand(0:42)
 
 frontend_html(vegalitespec::String, socketport::Integer) =
-    reduce(replace_template_param, [
+    reduce(
+    replace_template_param, [
         :SOCKETPORT => string(socketport),
         :VEGALITESPEC => vegalitespec,
-    ], init = VegaLiteWebsocketFrontEndTemplate)
+    ], init = VegaLiteWebsocketFrontEndTemplate
+)
 
 function static_content_handler(content::AbstractString, request::HTTP.Request)
     try
@@ -54,17 +56,20 @@ function static_content_handler(content::AbstractString, request::HTTP.Request)
     end
 end
 
-function HTTP.serve(plot::RealtimePlot{:VegaLite},
-    host=Sockets.localhost, port::Integer = 8081;
-    websocketport::Integer = rand_websocket_port(),
-    mindelay::Number = 1.0,
-    kwargs...
-)
+function HTTP.serve(
+        plot::RealtimePlot{:VegaLite},
+        host = Sockets.localhost, port::Integer = 8081;
+        websocketport::Integer = rand_websocket_port(),
+        mindelay::Number = 1.0,
+        kwargs...
+    )
     @assert mindelay > 0.0
     @async websocket_serve(plot, websocketport, mindelay)
     printmsg(plot, "Serving VegaLite frontend on http://$(host):$(port)")
-    return HTTP.serve(Base.Fix1(static_content_handler, frontend_html(plot.spec, websocketport)),
-                      host, port; kwargs...)
+    return HTTP.serve(
+        Base.Fix1(static_content_handler, frontend_html(plot.spec, websocketport)),
+        host, port; kwargs...
+    )
 end
 
 HTTP.serve!(plot::RealtimePlot, args...; kwargs...) =
@@ -75,7 +80,7 @@ function websocket_serve(plot::RealtimePlot, port::Integer, mindelay::Number)
         while true
             if hasnewdata(plot)
                 len = length(plot.data)
-                newdata = plot.data[(plot.last_sent_index+1):len]
+                newdata = plot.data[(plot.last_sent_index + 1):len]
                 printmsg(plot, "Sending data $newdata")
                 HTTP.WebSockets.send(ws, JSON.json(newdata))
                 plot.last_sent_index = len
@@ -84,7 +89,7 @@ function websocket_serve(plot::RealtimePlot, port::Integer, mindelay::Number)
             sleep(mindelay + rand())
         end
     end
-    printmsg(plot, "RealtimePlot websocket stopped")
+    return printmsg(plot, "RealtimePlot websocket stopped")
 end
 
 end

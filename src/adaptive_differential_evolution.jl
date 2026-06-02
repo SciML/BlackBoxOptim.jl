@@ -1,11 +1,13 @@
 include("bimodal_cauchy_distribution.jl")
 
-const ADE_DefaultOptions = chain(DE_DefaultOptions, ParamsDict(
-    # Distributions we will use to generate new F and CR values.
-    :fdistr => BimodalCauchy(0.65, 0.1, 1.0, 0.1, clampBelow0 = false),
-    :crdistr => BimodalCauchy(0.1, 0.1, 0.95, 0.1, clampBelow0 = false),
-    :SearchSpace => RectSearchSpace(1)
-))
+const ADE_DefaultOptions = chain(
+    DE_DefaultOptions, ParamsDict(
+        # Distributions we will use to generate new F and CR values.
+        :fdistr => BimodalCauchy(0.65, 0.1, 1.0, 0.1, clampBelow0 = false),
+        :crdistr => BimodalCauchy(0.1, 0.1, 0.95, 0.1, clampBelow0 = false),
+        :SearchSpace => RectSearchSpace(1)
+    )
+)
 
 """
 Specific data and functions for adaptation
@@ -26,8 +28,10 @@ mutable struct AdaptiveDiffEvoParameters
 
     function AdaptiveDiffEvoParameters(fdistr::BimodalCauchy, crdistr::BimodalCauchy)
         @assert !fdistr.clampBelow0 && !crdistr.clampBelow0 # population probs should not be degenerated
-        new(fdistr, crdistr,
-        Vector{Float64}(), Vector{Float64}()) # start with empty arrays because the population size unknown
+        return new(
+            fdistr, crdistr,
+            Vector{Float64}(), Vector{Float64}()
+        ) # start with empty arrays because the population size unknown
     end
 end
 
@@ -46,7 +50,7 @@ function crossover_parameters(params::AdaptiveDiffEvoParameters, pop::Population
 end
 
 function adjust!(params::AdaptiveDiffEvoParameters, index, is_improved::Bool)
-    if !is_improved
+    return if !is_improved
         # The trial vector for this target was not better so we change the f and cr constants.
         @inbounds params.fs[index] = rand(params.fdistr)
         @inbounds params.crs[index] = rand(params.crdistr)
@@ -56,43 +60,55 @@ end
 """
 An Adaptive DE crossover operator changes `cr` and `f` parameters of the search dynamically.
 """
-mutable struct AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N,1}
+mutable struct AdaptiveDiffEvoRandBin{N} <: DiffEvoCrossoverOperator{N, 1}
     params::AdaptiveDiffEvoParameters
 
-    AdaptiveDiffEvoRandBin{N}(params::AdaptiveDiffEvoParameters) where N = new{N}(params)
+    AdaptiveDiffEvoRandBin{N}(params::AdaptiveDiffEvoParameters) where {N} = new{N}(params)
 
-    AdaptiveDiffEvoRandBin{N}(options::Parameters) where N =
+    AdaptiveDiffEvoRandBin{N}(options::Parameters) where {N} =
         new{N}(AdaptiveDiffEvoParameters(options))
 end
 
 crossover_parameters(xover::AdaptiveDiffEvoRandBin, pop::Population, target_index) =
     crossover_parameters(xover.params, pop, target_index)
 
-adjust!(xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
-        new_fitness::F, old_fitness::F, is_improved::Bool) where F =
+adjust!(
+    xover::AdaptiveDiffEvoRandBin, op_index::Int, candi_index::Int,
+    new_fitness::F, old_fitness::F, is_improved::Bool
+) where {F} =
     adjust!(xover.params, candi_index, is_improved)
 
 const AdaptiveDiffEvoRandBin1 = AdaptiveDiffEvoRandBin{3}
 const AdaptiveDiffEvoRandBin2 = AdaptiveDiffEvoRandBin{5}
 
-function adaptive_diffevo(problem::OptimizationProblem,
-                options::Parameters, name::String,
-                select::IndividualsSelector = SimpleSelector(),
-                crossover::DiffEvoCrossoverOperator =
-                AdaptiveDiffEvoRandBin1(chain(ADE_DefaultOptions, options)))
-  opts = chain(ADE_DefaultOptions, options)
-  pop = population(problem, opts)
-  DiffEvoOpt(name, pop, select, crossover,
-             RandomBound(search_space(problem)))
+function adaptive_diffevo(
+        problem::OptimizationProblem,
+        options::Parameters, name::String,
+        select::IndividualsSelector = SimpleSelector(),
+        crossover::DiffEvoCrossoverOperator =
+            AdaptiveDiffEvoRandBin1(chain(ADE_DefaultOptions, options))
+    )
+    opts = chain(ADE_DefaultOptions, options)
+    pop = population(problem, opts)
+    return DiffEvoOpt(
+        name, pop, select, crossover,
+        RandomBound(search_space(problem))
+    )
 end
 
-adaptive_de_rand_1_bin(problem::OptimizationProblem,
-                       options::Parameters = EMPTY_PARAMS,
-                       name = "AdaptiveDE/rand/1/bin") =
+adaptive_de_rand_1_bin(
+    problem::OptimizationProblem,
+    options::Parameters = EMPTY_PARAMS,
+    name = "AdaptiveDE/rand/1/bin"
+) =
     adaptive_diffevo(problem, options, name)
 
-adaptive_de_rand_1_bin_radiuslimited(problem::OptimizationProblem,
-                                     options::Parameters = EMPTY_PARAMS,
-                                     name = "AdaptiveDE/rand/1/bin/radiuslimited") =
-    adaptive_diffevo(problem, options, name,
-                     RadiusLimitedSelector(chain(ADE_DefaultOptions, options)[:SamplerRadius]))
+adaptive_de_rand_1_bin_radiuslimited(
+    problem::OptimizationProblem,
+    options::Parameters = EMPTY_PARAMS,
+    name = "AdaptiveDE/rand/1/bin/radiuslimited"
+) =
+    adaptive_diffevo(
+    problem, options, name,
+    RadiusLimitedSelector(chain(ADE_DefaultOptions, options)[:SamplerRadius])
+)

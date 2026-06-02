@@ -26,20 +26,26 @@ end
 function setup_problem(func, parameters::Parameters)
     ss = check_and_create_search_space(parameters)
 
-    # Now create an optimization problem with the given information. We currently reuse the 
+    # Now create an optimization problem with the given information. We currently reuse the
     # type from our pre-defined problems so some of the data for the constructor is dummy.
-    problem = FunctionBasedProblem(func, "<unknown>", parameters[:FitnessScheme], ss,
-                                   parameters[:TargetFitness])
+    problem = FunctionBasedProblem(
+        func, "<unknown>", parameters[:FitnessScheme], ss,
+        parameters[:TargetFitness]
+    )
 
-    # validate fitness: create a random solution from the search space and ensure that 
+    # validate fitness: create a random solution from the search space and ensure that
     # fitness(problem) returns fitness_type(problem).
     ind = rand_individual(search_space(problem))
     res = fitness(ind, problem)
     fitnessT = fitness_type(problem)
     if !isa(res, fitnessT)
-      throw(ArgumentError("The supplied fitness function does NOT return the expected fitness type $(fitnessT)"*
-                          "when called with a potential solution "*
-                          "(when called with $(ind) it returned $(res) of type $(typeof(res)) so we cannot optimize it!"))
+        throw(
+            ArgumentError(
+                "The supplied fitness function does NOT return the expected fitness type $(fitnessT)" *
+                    "when called with a potential solution " *
+                    "(when called with $(ind) it returned $(res) of type $(typeof(res)) so we cannot optimize it!"
+            )
+        )
     end
 
     return problem, parameters
@@ -80,17 +86,17 @@ function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
             set_candidate!(optimizer(optctrl), x0)
         end
     end
-    run!(optctrl)
+    return run!(optctrl)
 end
 
 function bboptimize(functionOrProblem, x0, parameters::Parameters = EMPTY_PARAMS; kwargs...)
     optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
-    bboptimize(optctrl, x0)
+    return bboptimize(optctrl, x0)
 end
 
 function bboptimize(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
     optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
-    run!(optctrl)
+    return run!(optctrl)
 end
 
 """

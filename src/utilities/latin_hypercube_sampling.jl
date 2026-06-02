@@ -6,9 +6,11 @@ by `mins` and `maxs` using the Latin hypercube algorithm.
 
 Returns `dims`×`n` matrix.
 """
-function latin_hypercube_sampling(mins::AbstractVector{T},
-                                  maxs::AbstractVector{T},
-                                  n::Integer) where T<:Number
+function latin_hypercube_sampling(
+        mins::AbstractVector{T},
+        maxs::AbstractVector{T},
+        n::Integer
+    ) where {T <: Number}
     length(mins) == length(maxs) ||
         throw(DimensionMismatch("mins and maxs should have the same length"))
     all(xy -> xy[1] <= xy[2], zip(mins, maxs)) ||

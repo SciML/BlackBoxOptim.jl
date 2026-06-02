@@ -26,11 +26,11 @@ directions_for_k(cg::ConstantDirectionGen, k) =
 
 # We can easily do a compass search with GSS by generating directions
 # individually (+ and -) for each coordinate.
-compass_search_directions(n) = ConstantDirectionGen([Matrix{Float64}(I, n,n) -Matrix{Float64}(I, n, n)])
+compass_search_directions(n) = ConstantDirectionGen([Matrix{Float64}(I, n, n) -Matrix{Float64}(I, n, n)])
 
 const GSSDefaultParameters = ParamsDict(
-    :DeltaTolerance => 1e-10,       # GSS has converged if the StepSize drops below this tolerance level
-    :InitialStepSizeFactor => 0.50,        # Factor times the minimum search space diameter to give the initial StepSize
+    :DeltaTolerance => 1.0e-10,       # GSS has converged if the StepSize drops below this tolerance level
+    :InitialStepSizeFactor => 0.5,        # Factor times the minimum search space diameter to give the initial StepSize
     :RandomDirectionOrder => true,  # Randomly shuffle the order in which the directions are used for each step
     :StepSizeGamma => 2.0,          # Factor by which step size is multiplied if improved point is found. Should be >= 1.0.
     :StepSizePhi => 0.5,            # Factor by which step size is multiplied if NO improved point is found. Should be < 1.0.
@@ -45,7 +45,7 @@ Generating Set Search as described in Kolda2003:
   by direct search: New perspectives on some classical and modern methods."
   SIAM review 45.3 (2003): 385-482.
 """
-mutable struct GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator} <: DirectSearcher
+mutable struct GeneratingSetSearcher{V <: Evaluator, D <: DirectionGenerator, E <: EmbeddingOperator} <: DirectSearcher
     direction_gen::D
     evaluator::V
     embed::E
@@ -66,30 +66,35 @@ mutable struct GeneratingSetSearcher{V<:Evaluator, D<:DirectionGenerator, E<:Emb
             evaluator::V, dgen::D, embed::E,
             random_dir_order::Bool, step_size_factor::Float64, step_size_gamma::Float64,
             step_size_phi::Float64, step_size_max::Float64,
-            step_tol::Float64) where {V<:Evaluator, D<:DirectionGenerator, E<:EmbeddingOperator}
+            step_tol::Float64
+        ) where {V <: Evaluator, D <: DirectionGenerator, E <: EmbeddingOperator}
         # FIXME check parameters ranges
         n = numdims(evaluator)
         ss = search_space(evaluator)
         x = rand_individual(ss)
-        new{V, D, E}(dgen, evaluator, embed, ss, n, 0,
+        return new{V, D, E}(
+            dgen, evaluator, embed, ss, n, 0,
             random_dir_order, step_size_factor,
             step_size_gamma, step_size_phi,
             step_size_max, step_tol,
             calc_initial_step_size(ss, step_size_factor),
-            x, fitness(x, evaluator))
+            x, fitness(x, evaluator)
+        )
     end
 end
 
 # by default use RandomBound embedder
 function GeneratingSetSearcher(problem::OptimizationProblem, parameters::Parameters)
     params = chain(GSSDefaultParameters, parameters)
-    GeneratingSetSearcher(ProblemEvaluator(problem),
-                        get(params, :DirectionGenerator, compass_search_directions(numdims(problem))),
-                        RandomBound(search_space(problem)),
-                        params[:RandomDirectionOrder],
-                        params[:InitialStepSizeFactor], params[:StepSizeGamma],
-                        params[:StepSizePhi], params[:StepSizeMax],
-                        params[:DeltaTolerance])
+    return GeneratingSetSearcher(
+        ProblemEvaluator(problem),
+        get(params, :DirectionGenerator, compass_search_directions(numdims(problem))),
+        RandomBound(search_space(problem)),
+        params[:RandomDirectionOrder],
+        params[:InitialStepSizeFactor], params[:StepSizeGamma],
+        params[:StepSizePhi], params[:StepSizeMax],
+        params[:DeltaTolerance]
+    )
 end
 
 # We also include the name of the direction generator.

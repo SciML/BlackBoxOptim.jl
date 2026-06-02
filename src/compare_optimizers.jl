@@ -1,5 +1,7 @@
-function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
-    Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
+function compare_optimizers(
+        functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
+        Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...
+    )
 
     parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))
 
@@ -18,7 +20,7 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
         end
     end
 
-    sorted = sort( results, by = (t) -> t[4] )
+    sorted = sort(results, by = (t) -> t[4])
 
     if get(parameters, :TraceMode, :compact) != :silent
         println("\n********************************************************************************")
@@ -32,9 +34,11 @@ function compare_optimizers(functionOrProblem, parameters::Parameters = EMPTY_PA
     return sorted
 end
 
-function compare_optimizers(problems::Dict{Any, OptimizationProblem},
-                            parameters::Parameters = EMPTY_PARAMS;
-                            Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...)
+function compare_optimizers(
+        problems::Dict{Any, OptimizationProblem},
+        parameters::Parameters = EMPTY_PARAMS;
+        Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...
+    )
 
     parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))
 
@@ -57,16 +61,16 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
         end
     end
 
-    avg_ranks = round(mean(ranks, dims=2), digits=2)
-    avg_fitness = round(mean(fitnesses, dims=2), digits=3)
-    avg_times = round(mean(times, dims=2), digits=2)
+    avg_ranks = round(mean(ranks, dims = 2), digits = 2)
+    avg_fitness = round(mean(fitnesses, dims = 2), digits = 3)
+    avg_times = round(mean(times, dims = 2), digits = 2)
 
     perm = sortperm(avg_ranks[:])
     println("\nBy avg rank:")
     for i in 1:length(methods)
         j = perm[i]
         print("\n$(i). $(methods[j]), avg rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), avg time = $(avg_times[j]), ranks = ")
-        showcompact(ranks[j,:][:])
+        showcompact(ranks[j, :][:])
     end
 
     perm = sortperm(avg_fitness[:])
@@ -74,7 +78,7 @@ function compare_optimizers(problems::Dict{Any, OptimizationProblem},
     for i in 1:length(methods)
         j = perm[i]
         print("\n$(i). $(methods[j]), avg rank = $(avg_ranks[j]), avg fitness = $(avg_fitness[j]), avg time = $(avg_times[j]), ranks = ")
-        showcompact(ranks[j,:][:])
+        showcompact(ranks[j, :][:])
     end
 
     return ranks, fitnesses
@@ -84,7 +88,7 @@ end
 Summarize a vector of float values by stating its mean, std dev and median.
 """
 function report_on_values(desc, v, lpad = "", rpad = "", digits = 3)
-    println("$(lpad)$(desc): $(round(mean(v), sigdigits=digits)) (std. dev = $(round(std(v), sigdigits=digits)), median = $(round(median(v), sigdigits=digits)))")
+    return println("$(lpad)$(desc): $(round(mean(v), sigdigits = digits)) (std. dev = $(round(std(v), sigdigits = digits)), median = $(round(median(v), sigdigits = digits)))")
 end
 
 """
@@ -97,10 +101,10 @@ function count_dict_report(dict, desc, lpad = "", rpad = "")
     total = sum(collect(values(dict))) # FIXME collect() should not be required
     pdict = Dict()
     for (r, c) in dict
-        pdict[r] = round(100.0*c/total, digits=2)
+        pdict[r] = round(100.0 * c / total, digits = 2)
         println(lpad, r, ": ", c, " (", pdict[r], "%)", rpad)
     end
-    pdict
+    return pdict
 end
 
 """
@@ -115,20 +119,22 @@ function report_from_result_dict(statsdict)
     report_on_values("Time", statsdict[:times], "  ")
     report_on_values("Num function evals", statsdict[:numevals], "  ")
 
-    success_rate = round(get(pdict, "Within fitness tolerance of optimum", 0.0), digits=3)
+    success_rate = round(get(pdict, "Within fitness tolerance of optimum", 0.0), digits = 3)
     println("  Success rate: ", success_rate, "%\n")
-    success_rate
+    return success_rate
 end
 
-function rank_result_dicts_by(result_dicts, byfunc, desc; rev = false,
-        descsummary = "mean", digits = 3, rpad = "")
+function rank_result_dicts_by(
+        result_dicts, byfunc, desc; rev = false,
+        descsummary = "mean", digits = 3, rpad = ""
+    )
 
-    ranked = BlackBoxOptim.Utils.assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1e-3, rev = rev)
+    ranked = BlackBoxOptim.Utils.assign_ranks_within_tolerance(result_dicts; by = byfunc, tolerance = 1.0e-3, rev = rev)
     println("Ranked by $(descsummary) $(desc):")
     for (rank, rd, value) in ranked
-        println("  $(rank). $(rd[:method]), $(round(value, sigdigits=digits))$(rpad)")
+        println("  $(rank). $(rd[:method]), $(round(value, sigdigits = digits))$(rpad)")
     end
-    println("")
+    return println("")
 end
 
 function report_on_methods_results_on_one_problem(problem, result_dicts, numrepeats, max_time, ftol)
@@ -139,19 +145,24 @@ function report_on_methods_results_on_one_problem(problem, result_dicts, numrepe
     println("  Fitness tolerance = ", ftol, " (a run is a success if it reaches to within this value of true optimum)")
     println("  Max time budget per run = ", max_time, " secs\n")
 
-    rank_result_dicts_by(result_dicts, (d) -> d[:success_rate], "success rate (to reach within $(ftol) of optimum)";
-            descsummary = "median", rev = true, rpad = "%")
+    rank_result_dicts_by(
+        result_dicts, (d) -> d[:success_rate], "success rate (to reach within $(ftol) of optimum)";
+        descsummary = "median", rev = true, rpad = "%"
+    )
     rank_result_dicts_by(result_dicts, (d) -> median(d[:fitnesses]), "fitness"; descsummary = "median")
-    rank_result_dicts_by(result_dicts, (d) -> median(d[:times]), "time (in seconds)";
-            descsummary = "median", rpad = " secs")
+    rank_result_dicts_by(
+        result_dicts, (d) -> median(d[:times]), "time (in seconds)";
+        descsummary = "median", rpad = " secs"
+    )
     rank_result_dicts_by(result_dicts, (d) -> round(Int, median(d[:numevals])), "num function evals"; descsummary = "median")
 
     for rd in result_dicts
         report_from_result_dict(rd)
     end
+    return
 end
 
-function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1e-5, extraparams::Parameters = EMPTY_PARAMS)
+function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol = 1.0e-5, extraparams::Parameters = EMPTY_PARAMS)
     fp = instantiate(problem, dim)
     result_dicts = ParamsDict[]
 
@@ -162,14 +173,14 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
 
     for m in methods
         ts, fs, nes = zeros(numrepeats), zeros(numrepeats), zeros(Int, numrepeats)
-        rcounts = Dict{String,Int}()
+        rcounts = Dict{String, Int}()
 
         results = map(1:numrepeats) do i
             result = bboptimize(fp, params; MaxTime = max_time, Method = m)
 
             # Save key data about this run:
-            ts[i]  = elapsed_time(result)
-            fs[i]  = best_fitness(result)
+            ts[i] = elapsed_time(result)
+            fs[i] = best_fitness(result)
             nes[i] = f_calls(result)
 
             # And count only the general stop reasons
@@ -182,5 +193,5 @@ function repeated_bboptimize(numrepeats, problem, dim, methods, max_time, ftol =
         push!(result_dicts, rdict)
     end
 
-    report_on_methods_results_on_one_problem(fp, result_dicts, numrepeats, max_time, ftol)
+    return report_on_methods_results_on_one_problem(fp, result_dicts, numrepeats, max_time, ftol)
 end

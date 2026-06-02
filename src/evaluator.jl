@@ -20,7 +20,7 @@ shutdown!(e::Evaluator) = e # do nothing
 Calculate fitness of `candidate` and optionally apply `f`.
 `force` specifies whether to re-evaluate fitness, if the candidate already has non-NA one.
 """
-function update_fitness!(f::Any, e::Evaluator, candidate::Candidate; force::Bool=false)
+function update_fitness!(f::Any, e::Evaluator, candidate::Candidate; force::Bool = false)
     # evaluate fitness if not known yet
     if force || isnafitness(candidate.fitness, fitness_scheme(e.archive))
         candidate.fitness = fitness(candidate.params, e, candidate.tag)
@@ -29,8 +29,8 @@ function update_fitness!(f::Any, e::Evaluator, candidate::Candidate; force::Bool
     return candidate
 end
 
-update_fitness!(e::Evaluator, candidate::Candidate; force::Bool=false) =
-    update_fitness!(nothing, e, candidate, force=force)
+update_fitness!(e::Evaluator, candidate::Candidate; force::Bool = false) =
+    update_fitness!(nothing, e, candidate, force = force)
 
 """
     update_fitness!([f], eval::Evaluator, candidates; force::Bool=false)
@@ -38,7 +38,7 @@ update_fitness!(e::Evaluator, candidate::Candidate; force::Bool=false) =
 Calculate fitness of `candidates` and optionally apply `f` to each processed one.
 `force` specifies if already existing non-NA fitnesses should be re-evaluated.
 """
-function update_fitness!(f::Any, e::Evaluator, candidates::Any; force::Bool=false)
+function update_fitness!(f::Any, e::Evaluator, candidates::Any; force::Bool = false)
     fs = fitness_scheme(e.archive)
     for candi in candidates
         if force || isnafitness(fitness(candi), fs)
@@ -48,8 +48,8 @@ function update_fitness!(f::Any, e::Evaluator, candidates::Any; force::Bool=fals
     return candidates
 end
 
-update_fitness!(e::Evaluator, candidates::Any; force::Bool=false) =
-    update_fitness!(nothing, e, candidates, force=force)
+update_fitness!(e::Evaluator, candidates::Any; force::Bool = false) =
+    update_fitness!(nothing, e, candidates, force = force)
 
 """
 The abstract base type for asynchronous evaluators.
@@ -118,7 +118,7 @@ Default implementation of the `Evaluator`.
 `FP` is the original problem's fitness type
 `FA` is the fitness type actually stored by the archive.
 """
-mutable struct ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: Evaluator{P}
+mutable struct ProblemEvaluator{FP, FA, A <: Archive, P <: OptimizationProblem} <: Evaluator{P}
     # FIXME F is the fitness type of the problem, but with current Julia it's
     # not possible to get and use it at declaration type
     problem::P
@@ -126,10 +126,11 @@ mutable struct ProblemEvaluator{FP, FA, A<:Archive, P<:OptimizationProblem} <: E
     num_evals::Int
     last_fitness::FP
 
-    ProblemEvaluator(problem::P, archive::A) where {P<:OptimizationProblem, A<:Archive} =
-        new{fitness_type(fitness_scheme(problem)),fitness_type(archive),A,P}(
-                problem, archive,
-                0, nafitness(fitness_scheme(problem)))
+    ProblemEvaluator(problem::P, archive::A) where {P <: OptimizationProblem, A <: Archive} =
+        new{fitness_type(fitness_scheme(problem)), fitness_type(archive), A, P}(
+        problem, archive,
+        0, nafitness(fitness_scheme(problem))
+    )
 end
 
 ProblemEvaluator(problem::OptimizationProblem; archiveCapacity::Int = 10) =
@@ -146,7 +147,7 @@ parameters and calculated fitness.
 
 Returns the fitness in the archived format.
 """
-function fitness(params::Individual, e::ProblemEvaluator, tag::Int=0)
+function fitness(params::Individual, e::ProblemEvaluator, tag::Int = 0)
     e.last_fitness = fit = fitness(params, e.problem)
     e.num_evals += 1
     fita = archived_fitness(fit, e.archive)
@@ -180,9 +181,11 @@ end
 
 function rank_by_fitness!(e::Evaluator, candidates::AbstractVector{<:Candidate})
     fs = fitness_scheme(e)
-    sort!(update_fitness!(e, candidates);
-          # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed
-          by=fitness, lt=(x, y) -> is_better(x, y, fs))
+    return sort!(
+        update_fitness!(e, candidates);
+        # FIXME use lt=fitness_scheme(a) when v0.5 #14919 would be fixed
+        by = fitness, lt = (x, y) -> is_better(x, y, fs)
+    )
 end
 
 # called by check_stop_condition(OptRunController)

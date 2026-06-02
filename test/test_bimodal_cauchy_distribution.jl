@@ -1,7 +1,7 @@
 @testset "Bimodal Cauchy Distributions" begin
 
     @testset "sample bimodal cauchy with truncation above 1" begin
-        bc = BlackBoxOptim.BimodalCauchy(0.65, 0.1, 1.0, 0.1, clampBelow0=false)
+        bc = BlackBoxOptim.BimodalCauchy(0.65, 0.1, 1.0, 0.1, clampBelow0 = false)
 
         n_gt0 = 0
         n_le1 = 0

@@ -1,4 +1,3 @@
-
 #####################################################################
 # Base functions.
 #####################################################################
@@ -19,8 +18,8 @@ end
 
 function elliptic(x)
     D = length(x)
-    condition = 1e+6
-    coefficients = condition .^ range(0, stop=1, length=D)
+    condition = 1.0e+6
+    coefficients = condition .^ range(0, stop = 1, length = D)
     return sum(coefficients .* abs2.(x))
 end
 
@@ -34,13 +33,13 @@ end
 
 function rastrigin(x)
     D = length(x)
-    10 * D + sum(abs2, x) - 10 * sum(xx -> cos(2π * xx), x)
+    return 10 * D + sum(abs2, x) - 10 * sum(xx -> cos(2π * xx), x)
 end
 
 function ackley(x)
     D = length(x)
     try
-        return 20 - 20*exp(-0.2.*sqrt(sum(abs2, x)/D)) - exp(sum(xx -> cos(2π * xx), x)/D) + MathConstants.e
+        return 20 - 20 * exp(-0.2 .* sqrt(sum(abs2, x) / D)) - exp(sum(xx -> cos(2π * xx), x) / D) + MathConstants.e
     catch ex
         # Sometimes we have gotten a DomainError from the cos function so we protect this call
         println(ex)
@@ -64,7 +63,7 @@ end
 
 function rosenbrock(x)
     n = length(x)
-    return sum(100*(view(x, 2:n) .- view(x, 1:(n-1)).^2).^2 .+ (view(x, 1:(n-1)) .- 1).^2)
+    return sum(100 * (view(x, 2:n) .- view(x, 1:(n - 1)) .^ 2) .^ 2 .+ (view(x, 1:(n - 1)) .- 1) .^ 2)
 end
 
 #= FIXME this should be more efficient implementation, but switching to it would reset the benchmarks
@@ -78,7 +77,7 @@ step(x) = sum(xx -> ceil(xx + 0.5), x)
 
 function griewank(x)
     n = length(x)
-    1 + (1/4000)*sum(abs2, x) - prod(cos.(x ./ sqrt.(1:n)))
+    return 1 + (1 / 4000) * sum(abs2, x) - prod(cos.(x ./ sqrt.(1:n)))
 end
 
 schwefel2_22(x) = sum(abs, x) + prod(abs, x)
@@ -89,12 +88,12 @@ schwefel2_21(x) = maximum(abs, x)
 # [1.0, 1.0].
 function schwefel2_26(x)
     D = length(x)
-    418.98288727243369 * D - sum(xx -> xx * sin(sqrt(abs(xx))), x)
+    return 418.98288727243369 * D - sum(xx -> xx * sin(sqrt(abs(xx))), x)
 end
 
-cigar(x) = x[1]^2 + 1e6 * sum(abs2, view(x, 2:length(x)))
+cigar(x) = x[1]^2 + 1.0e6 * sum(abs2, view(x, 2:length(x)))
 
-cigtab(x) = x[1]^2 + 1e8 * x[end]^2 + 1e4 * sum(abs2, view(x, 2:length(x)-1))
+cigtab(x) = x[1]^2 + 1.0e8 * x[end]^2 + 1.0e4 * sum(abs2, view(x, 2:(length(x) - 1)))
 
 """
 Generic function to define `ShekelN` problems.
@@ -106,7 +105,7 @@ function shekel(x, a, c)
     @inbounds for i in eachindex(c)
         den = 0.0
         for j in 1:size(a, 2)
-            den += abs2(x[j] - a[i,j])
+            den += abs2(x[j] - a[i, j])
         end
         sum = sum - 1 / (den + c[i])
     end
@@ -157,17 +156,17 @@ function hartman(x, alpha, A, P)
     @inbounds for i in 1:length(alpha)
         isum = 0.0
         for j in 1:size(A, 2)
-            isum += A[i,j] * (x[j] - P[i,j])^2
+            isum += A[i, j] * (x[j] - P[i, j])^2
         end
         res -= alpha[i] * exp(-isum)
     end
-    res
+    return res
 end
 
 # constants for `Hartman6`
 Hartman6_alpha = [1.0 1.2 3.0 3.2]
-Hartman6_A = [10 3 17 3.50 1.7 8; 0.05 10 17 0.1 8 14; 3 3.5 1.7 10 17 8; 17 8 0.05 10 0.1 14]
-Hartman6_P = 1e-4 * [1312 1696 5569 124 8283 5886; 2329 4135 8307 3736 1004 9991; 2348 1451 3522 2883 3047 6650; 4047 8828 8732 5743 1091 381]
+Hartman6_A = [10 3 17 3.5 1.7 8; 0.05 10 17 0.1 8 14; 3 3.5 1.7 10 17 8; 17 8 0.05 10 0.1 14]
+Hartman6_P = 1.0e-4 * [1312 1696 5569 124 8283 5886; 2329 4135 8307 3736 1004 9991; 2348 1451 3522 2883 3047 6650; 4047 8828 8732 5743 1091 381]
 
 """
 `Hartman 6D` is a multi-minima, non-separable test problem. Our implementation is based on:
@@ -178,7 +177,7 @@ hartman6(x) = hartman(x, Hartman6_alpha, Hartman6_A, Hartman6_P)
 # constants for `Hartman3`
 Hartman3_alpha = [1.0 1.2 3.0 3.2]
 Hartman3_A = [3.0 10 30; 0.1 10 35; 3.0 10 30; 0.1 10 36]
-Hartman3_P = 1e-4 * [3689 1170 2673; 4699 4387 7470; 1091 8732 5547; 381 5743 8828]
+Hartman3_P = 1.0e-4 * [3689 1170 2673; 4699 4387 7470; 1091 8732 5547; 381 5743 8828]
 
 """
 `Hartman 3D` is a multi-minima, non-separable test problem. Our implementation is based on:
@@ -193,7 +192,7 @@ hartman3(x) = hartman(x, Hartman3_alpha, Hartman3_A, Hartman3_P)
 # in table II of the JADE paper: http://150.214.190.154/EAMHCO/pdf/JADE.pdf
 #####################################################################
 
-quartic(x) = sum((i,x) -> i*x^4, enumerate(x))
+quartic(x) = sum((i, x) -> i * x^4, enumerate(x))
 
 noisy_quartic(x) = quartic(x) + rand()
 
@@ -239,14 +238,14 @@ more than 1D versions. The Cuccu2011 paper uses the following values for
 and notes that `(15, 2)` and `(30, 2)` are the most difficult instances.
 """
 function deceptive_cuccu2011(l, w)
-    (x) -> begin
+    return (x) -> begin
         sumabsx = sum(abs, x)
         if sumabsx <= 1
             return sum(abs2, x)
-        elseif sumabsx >= l+1
+        elseif sumabsx >= l + 1
             return sum(xx -> abs2(abs(xx) - l), x)
         else
-            return (1 - 0.5 * sum(xx -> abs2(sin( (π * w * (abs(xx) - 1)) / l )), x))
+            return (1 - 0.5 * sum(xx -> abs2(sin((π * w * (abs(xx) - 1)) / l)), x))
         end
     end
 end
@@ -261,4 +260,4 @@ From section 3, page 7, of Tsallis1996 paper:
 available from http://www.if.ufrgs.br/~stariolo/publications/TsSt96_PhysA233_395_1996.pdf
 the original paper used this as a 4-dimensional problem but here it is generalized.
 """
-energy_tsallis1996(x::AbstractArray) = sum(xx -> abs2(xx^2 - 8.0), x) + 5.0*sum(x) + 57.3276
+energy_tsallis1996(x::AbstractArray) = sum(xx -> abs2(xx^2 - 8.0), x) + 5.0 * sum(x) + 57.3276

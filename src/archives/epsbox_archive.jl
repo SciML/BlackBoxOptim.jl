@@ -9,12 +9,16 @@ struct FrontierIndividual{F} <: ArchivedIndividual{F}
     n_restarts::Int                     # the number of method restarts so far
     timestamp::Float64                  # when archived
 
-    FrontierIndividual{F}(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
+    FrontierIndividual{F}(
+        fitness::F,
+        params, tag, num_fevals, n_restarts, timestamp = time()
+    ) where {F} =
         new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
-    FrontierIndividual(fitness::F,
-                   params, tag, num_fevals, n_restarts, timestamp=time()) where F =
+    FrontierIndividual(
+        fitness::F,
+        params, tag, num_fevals, n_restarts, timestamp = time()
+    ) where {F} =
         new{F}(fitness, params, tag, num_fevals, n_restarts, timestamp)
 end
 
@@ -23,18 +27,20 @@ tag(indi::FrontierIndividual) = indi.tag
 """
 Individual stored in `EpsBoxArchive`.
 """
-const EpsBoxFrontierIndividual{N,F<:Number} = FrontierIndividual{IndexedTupleFitness{N,F}}
-const FrontierSpatialIndex{N,F<:Number} = SI.SpatialIndex{Int,N,EpsBoxFrontierIndividual{N,F}}
-const FrontierRTree{N,F<:Number} = SI.RTree{Int,N,EpsBoxFrontierIndividual{N,F}}
+const EpsBoxFrontierIndividual{N, F <: Number} = FrontierIndividual{IndexedTupleFitness{N, F}}
+const FrontierSpatialIndex{N, F <: Number} = SI.SpatialIndex{Int, N, EpsBoxFrontierIndividual{N, F}}
+const FrontierRTree{N, F <: Number} = SI.RTree{Int, N, EpsBoxFrontierIndividual{N, F}}
 
 # traits for spatial indexing
-SI.mbrtrait(::Type{EpsBoxFrontierIndividual{N,F}}) where {N,F} = SI.HasMBR{SI.Rect{Int,N}}
-SI.mbr(indi::EpsBoxFrontierIndividual{N,F}) where {N,F} = SI.Rect(indi.fitness.index, indi.fitness.index)
+SI.mbrtrait(::Type{EpsBoxFrontierIndividual{N, F}}) where {N, F} = SI.HasMBR{SI.Rect{Int, N}}
+SI.mbr(indi::EpsBoxFrontierIndividual{N, F}) where {N, F} = SI.Rect(indi.fitness.index, indi.fitness.index)
 SI.idtrait(::Type{<:EpsBoxFrontierIndividual}) = SI.HasID{Int}
 SI.id(indi::EpsBoxFrontierIndividual) = indi.num_fevals
 
-EpsBoxFrontierIndividual(fitness::IndexedTupleFitness{N,F},
-               params, tag, num_fevals, n_restarts, timestamp=time()) where {N,F} =
+EpsBoxFrontierIndividual(
+    fitness::IndexedTupleFitness{N, F},
+    params, tag, num_fevals, n_restarts, timestamp = time()
+) where {N, F} =
     FrontierIndividual(fitness, params, tag, num_fevals, n_restarts, timestamp)
 
 """
@@ -44,12 +50,12 @@ dominated by any other solutions in the archive.
 It also counts the number of candidate solutions that have been added
 and how many ϵ-box progresses have been made.
 """
-mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N,F},FS}
+mutable struct EpsBoxArchive{N, F, FS <: EpsBoxDominanceFitnessScheme} <: Archive{IndexedTupleFitness{N, F}, FS}
     fit_scheme::FS        # Fitness scheme used
     start_time::Float64   # Time when archive created, we use this to approximate the starting time for the opt...
 
     num_candidates::Int               # Number of calls to add_candidate!()
-    best_front_elem::EpsBoxFrontierIndividual{N,F} # best frontier element: the candidate with the best aggregated fitness
+    best_front_elem::EpsBoxFrontierIndividual{N, F} # best frontier element: the candidate with the best aggregated fitness
     last_progress::Int                # when (wrt num_candidates) last ϵ-progress has occurred
     last_restart::Int                 # when (wrt num_dlast) last restart has occurred
     n_restarts::Int                   # the counter of the method restarts
@@ -58,23 +64,31 @@ mutable struct EpsBoxArchive{N,F,FS<:EpsBoxDominanceFitnessScheme} <: Archive{In
     max_size::Int         # maximal frontier size
     # TODO allow different frontier containers?
     # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
-    frontier::FrontierRTree{N,F}  # candidates along the fitness Pareto frontier
+    frontier::FrontierRTree{N, F}  # candidates along the fitness Pareto frontier
 
-    EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme{N,F};
-                  max_size::Integer = 1_000_000,
-                  leaf_capacity::Integer = 10,
-                  branch_capacity::Integer = 10) where {N,F} =
-        new{N,F,typeof(fit_scheme)}(fit_scheme, time(), 0,
-                                    EpsBoxFrontierIndividual{N,F}(nafitness(fit_scheme), Individual(), 0, 0, 0, NaN),
-                                    0, 0, 0, 0, max_size,
-                                    FrontierRTree{N,F}(leaf_capacity=leaf_capacity,
-                                                       branch_capacity=branch_capacity))
+    EpsBoxArchive(
+        fit_scheme::EpsBoxDominanceFitnessScheme{N, F};
+        max_size::Integer = 1_000_000,
+        leaf_capacity::Integer = 10,
+        branch_capacity::Integer = 10
+    ) where {N, F} =
+        new{N, F, typeof(fit_scheme)}(
+        fit_scheme, time(), 0,
+        EpsBoxFrontierIndividual{N, F}(nafitness(fit_scheme), Individual(), 0, 0, 0, NaN),
+        0, 0, 0, 0, max_size,
+        FrontierRTree{N, F}(
+            leaf_capacity = leaf_capacity,
+            branch_capacity = branch_capacity
+        )
+    )
 end
 
 EpsBoxArchive(fit_scheme::EpsBoxDominanceFitnessScheme, params::Parameters) =
-    EpsBoxArchive(fit_scheme, max_size=params[:MaxArchiveSize],
-                  leaf_capacity=params[:LeafCapacity],
-                  branch_capacity=params[:BranchCapacity])
+    EpsBoxArchive(
+    fit_scheme, max_size = params[:MaxArchiveSize],
+    leaf_capacity = params[:LeafCapacity],
+    branch_capacity = params[:BranchCapacity]
+)
 
 const EpsBoxArchive_DefaultParameters = ParamsDict(
     :MaxArchiveSize => 100_000,
@@ -82,7 +96,7 @@ const EpsBoxArchive_DefaultParameters = ParamsDict(
     :BranchCapacity => 10
 )
 
-Base.eltype(::Type{EpsBoxArchive{N,F}}) where {N,F} = EpsBoxFrontierIndividual{N,F}
+Base.eltype(::Type{EpsBoxArchive{N, F}}) where {N, F} = EpsBoxFrontierIndividual{N, F}
 
 Base.length(a::EpsBoxArchive) = length(a.frontier)
 Base.isempty(a::EpsBoxArchive) = isempty(a.frontier)
@@ -121,10 +135,10 @@ Get the number of `add_candidate!()` calls since the last ϵ-progress.
 If `since_restart` is specified, the number is relative to the last
 restart.
 """
-noprogress_streak(a::EpsBoxArchive; since_restart::Bool=false) =
+noprogress_streak(a::EpsBoxArchive; since_restart::Bool = false) =
     since_restart ?
-        a.num_candidates - max(a.last_progress, a.last_restart) :
-        a.num_candidates - a.last_progress
+    a.num_candidates - max(a.last_progress, a.last_restart) :
+    a.num_candidates - a.last_progress
 
 has_best_front_elem(a::EpsBoxArchive) = isfinite(a.best_front_elem.timestamp)
 best_front_elem(a::EpsBoxArchive) = has_best_front_elem(a) ? a.best_front_elem : nothing
@@ -133,8 +147,10 @@ best_fitness(a::EpsBoxArchive) = has_best_front_elem(a) ? fitness(a.best_front_e
 
 function rebuild_frontier!(a::EpsBoxArchive)
     # bulk-reload R-tree (leave leaves underfilled to postpone reinserts)
-    a.frontier = SI.load!(similar(a.frontier), a.frontier,
-                          leaf_fill = floor(Int, a.frontier.fill_factor * SI.capacity(SI.Leaf, a.frontier)))
+    a.frontier = SI.load!(
+        similar(a.frontier), a.frontier,
+        leaf_fill = floor(Int, a.frontier.fill_factor * SI.capacity(SI.Leaf, a.frontier))
+    )
     return a
 end
 
@@ -157,19 +173,21 @@ Returns the `tag`→`count` dictionary.
 """
 function tagcounts(a::EpsBoxArchive, θ::Number = 1.0)
     (0.0 < θ <= 1.0) || throw(ArgumentError("θ ($θ) should be in (0.0, 1.0] range"))
-    res = Dict{Int,Float64}()
+    res = Dict{Int, Float64}()
     for indi in pareto_frontier(a)
         curtag = tag(indi)
         if curtag > 0
             curcounts = get!(res, curtag, 0.0)
-            res[curtag] = curcounts+θ^(a.n_restarts-indi.n_restarts)
+            res[curtag] = curcounts + θ^(a.n_restarts - indi.n_restarts)
         end
     end
     return res
 end
 
-function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness{N,F},
-                        candidate, tag::Int=0, num_fevals::Int=-1) where {N,F}
+function add_candidate!(
+        a::EpsBoxArchive{N, F}, cand_fitness::IndexedTupleFitness{N, F},
+        candidate, tag::Int = 0, num_fevals::Int = -1
+    ) where {N, F}
     a.num_candidates += 1
     if num_fevals == -1
         num_fevals = a.num_candidates
@@ -219,9 +237,9 @@ function add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::IndexedTupleFitness
         # NOTE: when the old best element is replaced, the new aggscore might be
         #       worse due to differences in aggscore and eps-progress metrics
         d = a.best_front_elem.fitness.agg - frontel.fitness.agg
-        if  a.best_front_elem.fitness.index == frontel.fitness.index ||
-           (d > zero(d) && is_minimizing(a.fit_scheme)) ||
-           (d < zero(d) && !is_minimizing(a.fit_scheme))
+        if a.best_front_elem.fitness.index == frontel.fitness.index ||
+                (d > zero(d) && is_minimizing(a.fit_scheme)) ||
+                (d < zero(d) && !is_minimizing(a.fit_scheme))
             #@debug "New best candidate"
             a.best_front_elem = frontel
         end
@@ -234,14 +252,16 @@ end
 
 # actually this methods should never be called because the fitness
 # is already indexes within the method
-add_candidate!(a::EpsBoxArchive{N,F}, cand_fitness::NTuple{N,F},
-               candidate::AbstractIndividual, tag::Int=0, num_fevals::Int=-1) where {N,F} =
+add_candidate!(
+    a::EpsBoxArchive{N, F}, cand_fitness::NTuple{N, F},
+    candidate::AbstractIndividual, tag::Int = 0, num_fevals::Int = -1
+) where {N, F} =
     add_candidate!(a, archived_fitness(cand_fitness, a), candidate, tag, num_fevals)
 
 # called by check_stop_condition(e::Evaluator, ctrl)
 function check_stop_condition(a::EpsBoxArchive, p::OptimizationProblem, ctrl)
     if ctrl.max_steps_without_progress > 0 &&
-        noprogress_streak(a, since_restart=false) > ctrl.max_steps_without_progress
+            noprogress_streak(a, since_restart = false) > ctrl.max_steps_without_progress
         return "No epsilon-progress for more than $(ctrl.max_steps_without_progress) iterations"
     elseif a.n_oversize_inserts >= 10
         # notify that the last 10 inserts were to the oversized archive

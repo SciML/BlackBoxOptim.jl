@@ -25,7 +25,7 @@ struct RankedOrderValueMapping <: PermutationMapping end
 function apply(m::RankedOrderValueMapping, v::Vector{Float64})
     rov = zeros(Int, length(v))
     rov[sortperm(v)] = 1:length(v)
-    rov
+    return rov
 end
 # v = [2.54, 1.52, 2.13, 3.48, 2.37, 2.87]
 # @assert apply(RankedOrderValueMapping(), v) == [4, 1, 2, 6, 3, 5]
@@ -35,12 +35,12 @@ struct SortPermMapping <: PermutationMapping
     reverse::Bool
     SortPermMapping(r::Bool = false) = new(r)
 end
-apply(m::SortPermMapping, v::Vector{Float64}) = sortperm(v, rev=m.reverse)
+apply(m::SortPermMapping, v::Vector{Float64}) = sortperm(v, rev = m.reverse)
 
 # The literature on mappings is strange with some papers
 # basically just reversing the order and claiming novelty.
-# For example: Li, Xiangtao, and Minghao Yin. "A hybrid cuckoo 
-# search via Lévy flights for the permutation flow shop scheduling 
+# For example: Li, Xiangtao, and Minghao Yin. "A hybrid cuckoo
+# search via Lévy flights for the permutation flow shop scheduling
 # problem." International Journal of Production Research 51.16 (2013): 4732-4754.
 # Proposes Largest Ranked Value which just seems to be the reverse
 # order of SPV/ROV above. I can't imagine this can have any effect
@@ -48,12 +48,12 @@ apply(m::SortPermMapping, v::Vector{Float64}) = sortperm(v, rev=m.reverse)
 struct LargestRankedValueMapping <: PermutationMapping end
 function apply(m::LargestRankedValueMapping, v::Vector{Float64})
     rov = zeros(Int, length(v))
-    rov[sortperm(v, rev=true)] = 1:length(v)
-    rov
+    rov[sortperm(v, rev = true)] = 1:length(v)
+    return rov
 end
 
 # Let's try something of our own, i.e. truncate/floor countinuous
-# values to integers, then handle the duplicates by assigning the 
+# values to integers, then handle the duplicates by assigning the
 # remaining values based on which of the remaining ones it is closest
 # to.
 struct TruncateThenClosestRemainingMapping <: PermutationMapping
@@ -61,7 +61,7 @@ struct TruncateThenClosestRemainingMapping <: PermutationMapping
     s::Set{Int}
     TruncateThenClosestRemainingMapping(N::Int) = new(N, Set(1:N))
 end
-searchrange(m::TruncateThenClosestRemainingMapping) = (1.0, m.N + 1.0 - 1e-10)
+searchrange(m::TruncateThenClosestRemainingMapping) = (1.0, m.N + 1.0 - 1.0e-10)
 
 function apply(m::TruncateThenClosestRemainingMapping, v::Vector{Float64})
     ints = floor.(Int, v)
@@ -80,7 +80,7 @@ function apply(m::TruncateThenClosestRemainingMapping, v::Vector{Float64})
             counts[ival] += 1
         end
     end
-    ints
+    return ints
 end
 
 const ROV = RankedOrderValueMapping()
@@ -92,61 +92,75 @@ function make_perm_mapping_fitness(tsp, pm::PermutationMapping)
     function tspfitnessfn(v::Vector{Float64})
         c = cost(tsp, apply(pm, v))
         updatefitness!(pm, c)
-        c
+        return c
     end
-    tspfitnessfn
+    return tspfitnessfn
 end
 
-res_rov = bboptimize(make_perm_mapping_fitness(TSP, ROV); 
+res_rov = bboptimize(
+    make_perm_mapping_fitness(TSP, ROV);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
     PopulationSize = 1000,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp best runs: 836, 818
 # fri26.tsp best runs: 977
 
-res_spm = bboptimize(make_perm_mapping_fitness(TSP, SPM);
+res_spm = bboptimize(
+    make_perm_mapping_fitness(TSP, SPM);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
     PopulationSize = 1000,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp Best runs: 749, 753
 # fri26.tsp best runs: 937
 
-res_spm = bboptimize(make_perm_mapping_fitness(TSP, SPM);
+res_spm = bboptimize(
+    make_perm_mapping_fitness(TSP, SPM);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
     PopulationSize = 5000,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp Best runs: 753
 
-res_lrv = bboptimize(make_perm_mapping_fitness(TSP, LRV);
+res_lrv = bboptimize(
+    make_perm_mapping_fitness(TSP, LRV);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
     PopulationSize = 5000,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp Best runs: 881
 
-res_spm = bboptimize(make_perm_mapping_fitness(TSP, SPM);
+res_spm = bboptimize(
+    make_perm_mapping_fitness(TSP, SPM);
     SearchRange = (0.0, 10.0), NumDimensions = size(TSP),
     Method = :xnes,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp Best runs: 853
 
-res_trc1000 = bboptimize(make_perm_mapping_fitness(TSP, TRC);
+res_trc1000 = bboptimize(
+    make_perm_mapping_fitness(TSP, TRC);
     SearchRange = searchrange(TRC), NumDimensions = size(TSP),
     PopulationSize = 1000,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp Best runs: 699, 722, 699, 699
 # fri26.tsp best runs: 937
 
-res_trc100 = bboptimize(make_perm_mapping_fitness(TSP, TRC);
+res_trc100 = bboptimize(
+    make_perm_mapping_fitness(TSP, TRC);
     SearchRange = searchrange(TRC), NumDimensions = size(TSP),
     PopulationSize = 100,
-    MaxTime = 30.0)
+    MaxTime = 30.0
+)
 # dantzig42.tsp Best runs: 737, 778
 
 # The TRC mapping is good on this problem since it "repairs" duplicates
 # by turning them into the closest remaining city in the natural encoding.
 
-# An interesting representation might be to encode the probability 
-# to take the road from one city to another. This scales as O(n^2) but would 
+# An interesting representation might be to encode the probability
+# to take the road from one city to another. This scales as O(n^2) but would
 # enable global learning since the same position in the genome means the same
 # thing for all individuals. We only add the starting city as a rounded float
 # and then use the highest probability of the already non-visited nodes
@@ -156,18 +170,20 @@ struct EdgeTraversalProbabilitiesMapping <: PermutationMapping
     EdgeTraversalProbabilitiesMapping(N::Int) = new(N)
 end
 function searchspace(m::EdgeTraversalProbabilitiesMapping)
-    ss = [(1.0, float(m.N)+0.99999999)]
+    ss = [(1.0, float(m.N) + 0.99999999)]
     for i in 1:(m.N^2)
         push!(ss, (0.0, 1.0))
     end
-    ss
+    return ss
 end
 
 apply(m::EdgeTraversalProbabilitiesMapping, v::Vector{Float64}) =
     apply!(m, v, Array{Int}(undef, m.N))
 
-function apply!(m::EdgeTraversalProbabilitiesMapping, 
-    v::Vector{Float64}, permutation::Vector{Int})
+function apply!(
+        m::EdgeTraversalProbabilitiesMapping,
+        v::Vector{Float64}, permutation::Vector{Int}
+    )
 
     i = 1
     permutation[i] = currentcity = floor(Int, v[1])
@@ -175,9 +191,9 @@ function apply!(m::EdgeTraversalProbabilitiesMapping,
     visited[currentcity] = 1
     while i < m.N
         i += 1
-        startidx = 2 + (currentcity-1)*m.N
+        startidx = 2 + (currentcity - 1) * m.N
         endidx = startidx + m.N - 1
-        perm = sortperm(view(v, startidx:endidx), rev=true)
+        perm = sortperm(view(v, startidx:endidx), rev = true)
         for candidatecity in perm
             if candidatecity != currentcity && !visited[candidatecity]
                 permutation[i] = candidatecity
@@ -187,16 +203,18 @@ function apply!(m::EdgeTraversalProbabilitiesMapping,
             end
         end
     end
-    permutation
+    return permutation
 end
 
 const ETP = EdgeTraversalProbabilitiesMapping(size(TSP))
 
 # Doesn't seem to work well, I guess the scaling makes it costly.
-res_etp1000 = bboptimize(make_perm_mapping_fitness(TSP, ETP);
+res_etp1000 = bboptimize(
+    make_perm_mapping_fitness(TSP, ETP);
     SearchSpace = searchspace(ETP),
     PopulationSize = 1000,
-    MaxTime = 60.0)
+    MaxTime = 60.0
+)
 
 # We could try TRC with backups i.e. each also has a backup which is checked
 # and only if that also is not available do we search for the closest remaining one.

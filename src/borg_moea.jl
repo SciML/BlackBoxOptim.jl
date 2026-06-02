@@ -4,7 +4,7 @@ Borg MOEA algorithm.
 Based on Hadka & Reed, "Borg: An Auto-Adaptive Many-Objective Evolutionary Computing
 Framework", Evol. Comp. 2013
 """
-mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticOperator,E<:EmbeddingOperator} <: SteppingOptimizer
+mutable struct BorgMOEA{FS <: FitnessScheme, V <: Evaluator, P <: Population, M <: GeneticOperator, E <: EmbeddingOperator} <: SteppingOptimizer
     evaluator::V
     population::P     # candidates, NOTE index one is always reserved for one archive parent for recombination
     rand_check_order::Vector{Int} # random population check order
@@ -38,11 +38,14 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
     embed::E          # embedding operator
 
     function BorgMOEA(
-        problem::O,
-        pop::P, recombinate::Vector{CrossoverOperator},
-        modify::M = M(), embed::E = E(), params = EMPTY_PARAMS) where
-            {O<:OptimizationProblem, P<:Population,
-             M<:GeneticOperator, E<:EmbeddingOperator}
+            problem::O,
+            pop::P, recombinate::Vector{CrossoverOperator},
+            modify::M = M(), embed::E = E(), params = EMPTY_PARAMS
+        ) where
+        {
+            O <: OptimizationProblem, P <: Population,
+            M <: GeneticOperator, E <: EmbeddingOperator,
+        }
         # NOTE if ϵ-dominance is used, params[:ϵ] has the priority
         fit_scheme = fitness_scheme(problem)
         isa(fit_scheme, TupleFitnessScheme) || throw(ArgumentError("BorgMOEA can only solve problems with `TupleFitnessScheme`"))
@@ -50,45 +53,56 @@ mutable struct BorgMOEA{FS<:FitnessScheme,V<:Evaluator,P<:Population,M<:GeneticO
         fit_scheme = EpsBoxDominanceFitnessScheme(fit_scheme, params[:ϵ])
         archive = EpsBoxArchive(fit_scheme, params)
         evaluator = make_evaluator(problem, archive, params)
-        new{typeof(fit_scheme),typeof(evaluator),P,M,E}(evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
-                params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
-                Categorical(ones(length(recombinate))/length(recombinate)),
-                params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
-                params[:MaxStepsWithoutEpsProgress],
-                recombinate, nothing,
-                TournamentSelector(fit_scheme, ceil(Int, params[:τ]*popsize(pop))), modify, embed)
+        return new{typeof(fit_scheme), typeof(evaluator), P, M, E}(
+            evaluator, pop, Vector{Int}(), 0, 0, 0, 0, 0,
+            params[:τ], params[:γ], params[:γ_δ], params[:PopulationSize],
+            Categorical(ones(length(recombinate)) / length(recombinate)),
+            params[:θ], params[:ζ], params[:OperatorsUpdatePeriod], params[:RestartCheckPeriod],
+            params[:MaxStepsWithoutEpsProgress],
+            recombinate, nothing,
+            TournamentSelector(fit_scheme, ceil(Int, params[:τ] * popsize(pop))), modify, embed
+        )
     end
 end
 
-const BorgMOEA_DefaultParameters = chain(EpsBoxArchive_DefaultParameters, ParamsDict(
-    :ϵ => 0.1,        # size of the ϵ-box
-    :τ => 0.02,       # selection ratio, fraction of population to use for tournament
-    :γ => 4.0,        # recommended population-to-archive ratio
-    :γ_δ => 0.25,     # the maximum allowed deviation of the population-to-archive ratio from γ
-    :θ => 0.9,        # restart-discounting coefficient for recombination operator weights
-    :ζ => 1.0,        # dampening coefficient for recombination operator weights
-    :RestartCheckPeriod => 1000,
-    :OperatorsUpdatePeriod => 100,
-    :MaxStepsWithoutEpsProgress => 100
-))
+const BorgMOEA_DefaultParameters = chain(
+    EpsBoxArchive_DefaultParameters, ParamsDict(
+        :ϵ => 0.1,        # size of the ϵ-box
+        :τ => 0.02,       # selection ratio, fraction of population to use for tournament
+        :γ => 4.0,        # recommended population-to-archive ratio
+        :γ_δ => 0.25,     # the maximum allowed deviation of the population-to-archive ratio from γ
+        :θ => 0.9,        # restart-discounting coefficient for recombination operator weights
+        :ζ => 1.0,        # dampening coefficient for recombination operator weights
+        :RestartCheckPeriod => 1000,
+        :OperatorsUpdatePeriod => 100,
+        :MaxStepsWithoutEpsProgress => 100
+    )
+)
 
 function borg_moea(problem::OptimizationProblem, options::Parameters = EMPTY_PARAMS)
     opts = chain(BorgMOEA_DefaultParameters, options)
     fs = fitness_scheme(problem)
     N = numobjectives(fs)
     F = fitness_eltype(fs)
-    pop = population(problem, opts, nafitness(IndexedTupleFitness{N,F}), ntransient=1)
-    BorgMOEA(problem, pop, CrossoverOperator[DiffEvoRandBin1(chain(DE_DefaultOptions, options)),
-                                           SimulatedBinaryCrossover(chain(SBX_DefaultOptions, options)),
-                                           SimplexCrossover{3}(chain(SPX_DefaultOptions, options)),
-                                           ParentCentricCrossover{2}(chain(PCX_DefaultOptions, options)),
-                                           ParentCentricCrossover{3}(chain(PCX_DefaultOptions, options)),
-                                           UnimodalNormalDistributionCrossover{2}(chain(UNDX_DefaultOptions, options)),
-                                           UnimodalNormalDistributionCrossover{3}(chain(UNDX_DefaultOptions, options))],
-            FixedGeneticOperatorsMixture(GeneticOperator[
-                                            MutationClock(PolynomialMutation(search_space(problem), chain(PM_DefaultOptions, options)), 1/numdims(problem)),
-                                            MutationClock(UniformMutation(search_space(problem)), 1/numdims(problem))], [0.75, 0.25]),
-            RandomBound(search_space(problem)), opts)
+    pop = population(problem, opts, nafitness(IndexedTupleFitness{N, F}), ntransient = 1)
+    return BorgMOEA(
+        problem, pop, CrossoverOperator[
+            DiffEvoRandBin1(chain(DE_DefaultOptions, options)),
+            SimulatedBinaryCrossover(chain(SBX_DefaultOptions, options)),
+            SimplexCrossover{3}(chain(SPX_DefaultOptions, options)),
+            ParentCentricCrossover{2}(chain(PCX_DefaultOptions, options)),
+            ParentCentricCrossover{3}(chain(PCX_DefaultOptions, options)),
+            UnimodalNormalDistributionCrossover{2}(chain(UNDX_DefaultOptions, options)),
+            UnimodalNormalDistributionCrossover{3}(chain(UNDX_DefaultOptions, options)),
+        ],
+        FixedGeneticOperatorsMixture(
+            GeneticOperator[
+                MutationClock(PolynomialMutation(search_space(problem), chain(PM_DefaultOptions, options)), 1 / numdims(problem)),
+                MutationClock(UniformMutation(search_space(problem)), 1 / numdims(problem)),
+            ], [0.75, 0.25]
+        ),
+        RandomBound(search_space(problem)), opts
+    )
 end
 
 archive(alg::BorgMOEA) = alg.evaluator.archive
@@ -108,9 +122,11 @@ function step!(alg::BorgMOEA)
     if alg.n_steps >= alg.last_restart_check + alg.restart_check_period
         alg.last_restart_check = alg.n_steps
         # check for restarting conditions
-        if (!isempty(archive(alg)) &&
-            (abs(popsize(alg.population) - alg.γ * length(archive(alg))) >= alg.γ_δ * length(archive(alg)))) ||
-            noprogress_streak(archive(alg), since_restart=true) >=  alg.max_steps_without_ϵ_progress
+        if (
+                !isempty(archive(alg)) &&
+                    (abs(popsize(alg.population) - alg.γ * length(archive(alg))) >= alg.γ_δ * length(archive(alg)))
+            ) ||
+                noprogress_streak(archive(alg), since_restart = true) >= alg.max_steps_without_ϵ_progress
             restart!(alg)
         end
     end
@@ -130,8 +146,10 @@ function recombine_individuals!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::Cro
     # select parents for recombination
     n_parents = numparents(recomb_op)
     # parent indices
-    parent_indices = select(alg.select, alg.population,
-                            isempty(archive(alg)) ? n_parents : n_parents-1)
+    parent_indices = select(
+        alg.select, alg.population,
+        isempty(archive(alg)) ? n_parents : n_parents - 1
+    )
     if !isempty(archive(alg))
         # get one parent from the archive and copy it to the fitrst transient member
         arch_ix = transient_range(alg.population)[1]
@@ -140,15 +158,17 @@ function recombine_individuals!(alg::BorgMOEA, recomb_op_ix::Int, recomb_op::Cro
     end
     # Crossover parents and target
     children = acquire_candis(alg.population, numchildren(recomb_op))
-    apply!(recomb_op, Individual[child.params for child in children],
-           zeros(Int, length(children)), alg.population, parent_indices)
+    apply!(
+        recomb_op, Individual[child.params for child in children],
+        zeros(Int, length(children)), alg.population, parent_indices
+    )
     for child in children
         apply!(alg.embed, child.params, alg.population, parent_indices[1])
         reset_fitness!(child, alg.population)
         child.extra = recomb_op
         child.tag = recomb_op_ix
     end
-    postprocess_recombined!(alg, children)
+    return postprocess_recombined!(alg, children)
 end
 
 prepare_recombination(alg::BorgMOEA) = nothing # do nothing
@@ -167,7 +187,7 @@ function prepare_recombination(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEva
 end
 
 function postprocess_recombined!(alg::BorgMOEA, candidates::Any)
-    update_fitness!(alg.evaluator, candidates, force=true) # implicitly updates the archive
+    update_fitness!(alg.evaluator, candidates, force = true) # implicitly updates the archive
     process_candidate!.(Ref(alg), candidates)
     return candidates
 end
@@ -177,7 +197,7 @@ end
 # balance between recombining and fitness evaluation
 function postprocess_recombined!(alg::BorgMOEA{<:FitnessScheme, <:AbstractAsyncEvaluator}, candidates::Any)
     @assert isnothing(alg.recomb_fit_job)
-    alg.recomb_fit_job = async_update_fitness!(alg.evaluator, candidates, force=true)
+    alg.recomb_fit_job = async_update_fitness!(alg.evaluator, candidates, force = true)
     @assert !isnothing(alg.recomb_fit_job)
     return candidates
 end
@@ -194,7 +214,7 @@ function process_candidate!(alg::BorgMOEA, candi::Candidate)
     comp = 0
     candi.index = 0
     # iterate through the population in a random way
-    n_checks = rand(min(popsz, 2*alg.select.size):popsz)
+    n_checks = rand(min(popsz, 2 * alg.select.size):popsz)
     @inbounds for i in 1:n_checks
         # use "modern" Fisher-Yates shuffle to gen random population index
         j = rand(i:popsz)
@@ -232,35 +252,47 @@ end
 # trace current optimization state,
 # Called by OptRunController trace_progress()
 function trace_state(io::IO, alg::BorgMOEA, mode::Symbol)
-    println(io, "pop.size=", popsize(alg.population),
-                " arch.size=", length(archive(alg)),
-                " n.restarts=", alg.n_restarts)
-    if mode == :verbose
+    println(
+        io, "pop.size=", popsize(alg.population),
+        " arch.size=", length(archive(alg)),
+        " n.restarts=", alg.n_restarts
+    )
+    return if mode == :verbose
         # output recombination operator rates
         println(io, "P(recombine):")
         for i in eachindex(alg.recombinate)
-            println(io, "  #$i(", alg.recombinate[i], ")=",
-                    @sprintf("%.4f",alg.recombinate_distr.p[i]))
+            println(
+                io, "  #$i(", alg.recombinate[i], ")=",
+                @sprintf("%.4f", alg.recombinate_distr.p[i])
+            )
         end
     end
 end
 
 update_population_fitness!(alg::BorgMOEA) =
-    update_fitness!(alg.evaluator,
-                    PopulationCandidatesIterator(alg.population,
-                                                 alg.population.nafitness)) do candi
-        alg.population.fitness[candi.index] = candi.fitness
-        release_candi(alg.population, candi)
-    end
+    update_fitness!(
+    alg.evaluator,
+    PopulationCandidatesIterator(
+        alg.population,
+        alg.population.nafitness
+    )
+) do candi
+    alg.population.fitness[candi.index] = candi.fitness
+    release_candi(alg.population, candi)
+end
 
 """
 Update recombination operator probabilities based on the archive tag counts.
 """
 function update_recombination_weights!(alg::BorgMOEA)
     op_counts = tagcounts(archive(alg), alg.θ)
-    adj_op_counts = sum(values(op_counts)) + length(alg.recombinate)*alg.ζ
-    alg.recombinate_distr = Categorical([(get(op_counts, i, 0)+alg.ζ)/adj_op_counts
-                                        for i in eachindex(alg.recombinate)])
+    adj_op_counts = sum(values(op_counts)) + length(alg.recombinate) * alg.ζ
+    alg.recombinate_distr = Categorical(
+        [
+            (get(op_counts, i, 0) + alg.ζ) / adj_op_counts
+                for i in eachindex(alg.recombinate)
+        ]
+    )
     alg.last_wrecombinate_update = alg.n_steps
     return alg
 end
@@ -280,11 +312,11 @@ end
 """
 Iterates the mutants.
 """
-struct BorgMutantsIterator{P<:PopulationWithFitness, A<:BorgMOEA} <: AbstractPopulationCandidatesIterator{P}
+struct BorgMutantsIterator{P <: PopulationWithFitness, A <: BorgMOEA} <: AbstractPopulationCandidatesIterator{P}
     alg::A
     last_nonmutant::Int
 
-    BorgMutantsIterator(alg::A, last_nonmutant::Int) where A<:BorgMOEA =
+    BorgMutantsIterator(alg::A, last_nonmutant::Int) where {A <: BorgMOEA} =
         new{typeof(alg.population), A}(alg, last_nonmutant)
 end
 
@@ -292,12 +324,12 @@ Base.IteratorSize(::Type{<:BorgMutantsIterator}) = Base.HasLength()
 Base.length(it::BorgMutantsIterator) = popsize(it.alg.population) - it.last_nonmutant
 
 Base.iterate(it::BorgMutantsIterator, ix::Integer = it.last_nonmutant) =
-    ix < popsize(it.alg.population) ? (acquire_mutant(it.alg, ix+1, it.last_nonmutant), ix+1) : nothing
+    ix < popsize(it.alg.population) ? (acquire_mutant(it.alg, ix + 1, it.last_nonmutant), ix + 1) : nothing
 
 populate_by_mutants(alg::BorgMOEA, last_nonmutant::Integer) =
     update_fitness!(alg.evaluator, BorgMutantsIterator(alg, last_nonmutant)) do mutant
-        accept_candi!(alg.population, mutant)
-    end
+    accept_candi!(alg.population, mutant)
+end
 
 """
 Restart Borg MOEA.
@@ -312,7 +344,7 @@ function restart!(alg::BorgMOEA)
     resize!(alg.population, new_popsize)
     ndelegates = min(narchived, new_popsize)
     # get the indexes of the frontier elements to put into the population
-    delegate_ixs = sort!(sample(1:narchived, ndelegates, replace=false))
+    delegate_ixs = sort!(sample(1:narchived, ndelegates, replace = false))
     delegate_pos = 1 # position of the current delegate index
     for (candi_ix, candi) in enumerate(pareto_frontier(archive(alg)))
         delegate_pos > length(delegate_ixs) && break
@@ -325,6 +357,6 @@ function restart!(alg::BorgMOEA)
     populate_by_mutants(alg, ndelegates)
     alg.select.size = min(new_popsize, max(3, ceil(Int, alg.τ * new_popsize)))
     alg.last_restart = alg.n_steps
-    alg.n_restarts+=1
+    alg.n_restarts += 1
     return alg
 end

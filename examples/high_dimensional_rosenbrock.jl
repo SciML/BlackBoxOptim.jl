@@ -15,17 +15,18 @@ using BlackBoxOptim
 
 function fitness_for_opt(problemname, numDimensions, populationSize, numSteps, method)
 
-  p = BlackBoxOptim.example_problems[problemname]
-  problem = instantiate(p, numDimensions)
+    p = BlackBoxOptim.example_problems[problemname]
+    problem = instantiate(p, numDimensions)
 
-  println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
+    println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
 
-  result = bboptimize(problem; Method = method, 
-    NumDimensions = numDimensions, PopulationSize = populationSize,
-    MaxSteps = numSteps
-  )
+    result = bboptimize(
+        problem; Method = method,
+        NumDimensions = numDimensions, PopulationSize = populationSize,
+        MaxSteps = numSteps
+    )
 
-  best_fitness(result)
+    return best_fitness(result)
 end
 
 problemname = "Rosenbrock"
@@ -33,7 +34,7 @@ problemname = "Rosenbrock"
 # Call once to compile everything
 fitness_for_opt(problemname, 2, 10, 100, :adaptive_de_rand_1_bin)
 
-for (dims, steps) in [(128, 1e6), (256, 2e6), (512, 4e6)]
-  println("Num dims = ", dims, ", Num steps = ", steps)
-  fitness = fitness_for_opt(problemname, dims, 50, steps, :adaptive_de_rand_1_bin)
+for (dims, steps) in [(128, 1.0e6), (256, 2.0e6), (512, 4.0e6)]
+    println("Num dims = ", dims, ", Num steps = ", steps)
+    fitness = fitness_for_opt(problemname, dims, 50, steps, :adaptive_de_rand_1_bin)
 end

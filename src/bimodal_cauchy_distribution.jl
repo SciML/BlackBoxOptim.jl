@@ -15,10 +15,14 @@ struct BimodalCauchy
     clampBelow0::Bool
     clampAbove1::Bool
 
-    BimodalCauchy(location1, scale1, location2, scale2;
-                  mix_prob::Number=0.5, clampBelow0::Bool=true, clampAbove1::Bool=true) =
-        new(Cauchy(location1, scale1), Cauchy(location2, scale2),
-            mix_prob, clampBelow0, clampAbove1)
+    BimodalCauchy(
+        location1, scale1, location2, scale2;
+        mix_prob::Number = 0.5, clampBelow0::Bool = true, clampAbove1::Bool = true
+    ) =
+        new(
+        Cauchy(location1, scale1), Cauchy(location2, scale2),
+        mix_prob, clampBelow0, clampAbove1
+    )
 end
 
 function Random.rand(distr::BimodalCauchy)
@@ -32,6 +36,7 @@ function Random.rand(distr::BimodalCauchy)
             return value
         end
     end
+    return
 end
 
 function Random.rand!(distr::BimodalCauchy, A::AbstractArray)

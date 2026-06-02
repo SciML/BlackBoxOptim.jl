@@ -24,7 +24,7 @@ evaluate(f::BBOBFunction, x) = evalfull(f, x)[0]
 # Returns a float penalty for being outside of boundaries [-5, 5]
 function defaultboundaryhandling(x, fac = 1.0)
     xoutside = maximum(vcat(zeros(size(x)), abs(x) - 5), 1) .* sign(x)
-    return fac * sum(xoutside.^2)
+    return fac * sum(xoutside .^ 2)
 end
 
 # Most functions do not have a penalty outside the boundaries though so return
@@ -37,7 +37,7 @@ function evalfull(f::BBOBFunction, x)
     # it is assumed x are row vectors
 
     if f.lastshape != curshape
-      initwithsize(curshape, dim)
+        initwithsize(curshape, dim)
     end
 
     # BOUNDARY HANDLING
@@ -84,7 +84,7 @@ struct BBOBUniformFunction <: BBOBNoiseFunction
     unifbeta::Float64
 end
 noise(f::BBOBUniformFunction, ftrue) =
-    fUniform(ftrue, f.unifalphafac * (0.49 + 1. / f.dim), f.unifbeta)
+    fUniform(ftrue, f.unifalphafac * (0.49 + 1.0 / f.dim), f.unifbeta)
 
 struct BBOBCauchyFunction <: BBOBNoiseFunction
     cauchyalpha::Float64
@@ -93,7 +93,7 @@ end
 noise(f::BBOBCauchyFunction, ftrue) = fCauchy(ftrue, f.cauchyalpha, f.cauchyp)
 
 abstract type FSphere{NoiseFunc} <: BBOBFunction end
-compute_core(f::FSphere, x) = sum(x.^2)
+compute_core(f::FSphere, x) = sum(x .^ 2)
 
 # Sphere without noise
 struct F1 <: FSphere{BBOBNfreeFunction}

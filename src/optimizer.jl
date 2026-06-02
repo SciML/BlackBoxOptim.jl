@@ -104,7 +104,7 @@ end
 
 function set_candidate!(o::SteppingOptimizer, x0)
     o.xfitness = fitness(x0, evaluator(o))
-    o.x = x0
+    return o.x = x0
 end
 
 """
@@ -131,14 +131,14 @@ function shutdown!(o::Optimizer)
 end
 
 shutdown!(o::SteppingOptimizer) =
-  shutdown!(evaluator(o)) # shutdown the evaluator
+    shutdown!(evaluator(o)) # shutdown the evaluator
 
 # The standard name function converts the type of the optimizer to a string
 # and strips off trailing "Opt".
 function name(o::Optimizer)
     s = string(typeof(o))
-    if s[end-2:end] == "Opt"
-        return s[1:end-3]
+    if s[(end - 2):end] == "Opt"
+        return s[1:(end - 3)]
     else
         return s
     end

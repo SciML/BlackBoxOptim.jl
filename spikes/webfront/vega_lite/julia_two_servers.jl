@@ -5,13 +5,13 @@ timestamp(t = time()) = Libc.strftime("%Y-%m-%d %H:%M.%S", t)
 function start_http_and_websocket_servers(httpcontent, httpport = 8081, wsport = 8083)
     http = HttpHandler() do req::Request, res::Response
         @show req
-        Response( servedcontent )
+        Response(servedcontent)
     end
-    httpserver = Server( http )
+    httpserver = Server(http)
     println("Starting http server on port $httpport")
     @async run(httpserver, httpport)
 
-    wsh = WebSocketHandler() do req,client
+    wsh = WebSocketHandler() do req, client
         println("WebSocket opened from $client:\n $req")
 
         # Send meta-info
@@ -22,7 +22,7 @@ function start_http_and_websocket_servers(httpcontent, httpport = 8081, wsport =
 
         # For sending optimization events we do not set the info key. This saves some time
         # in the json conversion on both sides. We reuse one and the same Dict to save on mem.
-        obj = Dict(:ElapsedSeconds => 0, :BestFitness => 1000 + rand()*1000, :NumEvals => 1)
+        obj = Dict(:ElapsedSeconds => 0, :BestFitness => 1000 + rand() * 1000, :NumEvals => 1)
 
         while true
             sleep(0.1 + rand() * 0.3)

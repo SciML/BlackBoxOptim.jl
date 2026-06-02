@@ -11,8 +11,8 @@
         @test hat_compare(-1.0, -1.0) == 0
 
         @test hat_compare(0.0, NaN) == -1
-        @test hat_compare(NaN, 1.0) ==  1
-        @test hat_compare(NaN, NaN) ==  0
+        @test hat_compare(NaN, 1.0) == 1
+        @test hat_compare(NaN, NaN) == 0
     end
 
     @testset "ScalarFitnessScheme" begin
@@ -73,7 +73,7 @@
             end
 
             @testset "ParetoFitnessScheme{1}(is_minimizing=false)" begin
-                scheme = ParetoFitnessScheme{1}(is_minimizing=false)
+                scheme = ParetoFitnessScheme{1}(is_minimizing = false)
                 @test fitness_type(scheme) == NTuple{1, Float64}
                 @test fitness_eltype(scheme) === Float64
                 @test numobjectives(scheme) == 1
@@ -88,7 +88,7 @@
                 scheme = ParetoFitnessScheme{2}()
                 @test fitness_type(scheme) == NTuple{2, Float64}
                 @test fitness_eltype(scheme) === Float64
-                @test isequal(nafitness(scheme), (NaN,NaN))
+                @test isequal(nafitness(scheme), (NaN, NaN))
                 @test numobjectives(scheme) == 2
                 @test is_minimizing(scheme)
                 @test isnafitness(nafitness(scheme), scheme)
@@ -101,13 +101,13 @@
                 scheme = ParetoFitnessScheme{3}()
                 @test fitness_type(scheme) == NTuple{3, Float64}
                 @test fitness_eltype(scheme) === Float64
-                @test isequal(nafitness(scheme), (NaN,NaN,NaN))
+                @test isequal(nafitness(scheme), (NaN, NaN, NaN))
                 @test numobjectives(scheme) == 3
                 @test is_minimizing(scheme)
                 @test isnafitness(nafitness(scheme), scheme)
-                @test isnafitness((NaN,NaN,NaN), scheme)
-                @test isnafitness((1.0,NaN,2.0), scheme)
-                @test isnafitness((1.0,2.0,2.0), scheme) == false
+                @test isnafitness((NaN, NaN, NaN), scheme)
+                @test isnafitness((1.0, NaN, 2.0), scheme)
+                @test isnafitness((1.0, 2.0, 2.0), scheme) == false
             end
         end
 
@@ -130,7 +130,7 @@
         end
 
         @testset "hat_compare(..., ParetoFitnessScheme{1}(is_minimizing=false))" begin
-            scheme = ParetoFitnessScheme{1}(is_minimizing=false)
+            scheme = ParetoFitnessScheme{1}(is_minimizing = false)
             @test hat_compare((-1.0,), (1.0,), scheme) == 1
             @test hat_compare((0.0,), (0.3,), scheme) == 1
             @test hat_compare((11.3,), (354.65,), scheme) == 1
@@ -143,7 +143,7 @@
         end
 
         @testset "hat_compare(..., ParetoFitnessScheme{2}(is_minimizing=true))" begin
-            scheme = ParetoFitnessScheme{2}(is_minimizing=true)
+            scheme = ParetoFitnessScheme{2}(is_minimizing = true)
             @test is_minimizing(scheme)
             @test_throws MethodError hat_compare((-1.0,), (1.0, 2.0), scheme)
             @test_throws MethodError hat_compare((2.0, -1.0, 3.0), (1.0, 2.0), scheme)
@@ -160,7 +160,7 @@
         end
 
         @testset "hat_compare(..., ParetoFitnessScheme{2}(is_minimizing=false))" begin
-            scheme = ParetoFitnessScheme{2}(is_minimizing=false)
+            scheme = ParetoFitnessScheme{2}(is_minimizing = false)
             @test is_minimizing(scheme) == false
             @test hat_compare((-1.0, 0.0), (1.0, 0.0), scheme) == 1
             @test hat_compare((0.0, -1.0), (0.3, 1.0), scheme) == 1
@@ -201,7 +201,7 @@
         end
 
         @testset "is_better/is_worse/same_fitness(..., ParetoFitnessScheme{2}(is_minimizing=false))" begin
-            scheme = ParetoFitnessScheme{2}(is_minimizing=false)
+            scheme = ParetoFitnessScheme{2}(is_minimizing = false)
 
             @test is_better((-1.0, 0.0), (1.0, 0.0), scheme) == false
             @test is_better((0.0, 0.0), (1.0, 0.0), scheme) == false
@@ -232,11 +232,11 @@
                     (1.0, 1.0, true, 1.0, 0.0),
                     (2.0, 2.0, false, 1.0, 0.0),
                     (-1.1, 1.0, true, -2, 0.9),
-                    (-5.4, 1.0, false, -5, 0.4)
+                    (-5.4, 1.0, false, -5, 0.4),
                 ]
                 res = BlackBoxOptim.ϵ_index(u, ϵ, Val{is_minim})
                 @test res[1] == u_ix
-                @test isapprox(res[2], delta; atol=1E-12)
+                @test isapprox(res[2], delta; atol = 1.0e-12)
             end
         end
 
@@ -266,23 +266,23 @@
             @test ifit1.orig == fit
             @test ifit1.agg == sum(fit)
             @test ifit1.index == (5, 3, -3)
-            @test isapprox(ifit1.dist, norm([0.05, 0.09])/0.1)
+            @test isapprox(ifit1.dist, norm([0.05, 0.09]) / 0.1)
 
             ifit2 = IndexedTupleFitness(fit, sum(fit), 0.1, Val{false})
             @test ifit2.orig == fit
             @test ifit2.agg == sum(fit)
             @test ifit2.index == (6, 3, -2)
-            @test isapprox(ifit2.dist, norm([0.05, 0.01])/0.1)
+            @test isapprox(ifit2.dist, norm([0.05, 0.01]) / 0.1)
 
             ifit3 = convert(IndexedTupleFitness, fit, EpsBoxDominanceFitnessScheme{3}(0.1))
             @test ifit3 == ifit1
-            ifit4 = convert(IndexedTupleFitness, fit, EpsBoxDominanceFitnessScheme{3}(0.1, is_minimizing=false))
+            ifit4 = convert(IndexedTupleFitness, fit, EpsBoxDominanceFitnessScheme{3}(0.1, is_minimizing = false))
             @test ifit4 == ifit2
         end
 
         @testset "hat_compare(..., EpsBoxDominanceFitnessScheme{2}(...))" begin
-            minscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=true)
-            maxscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing=false)
+            minscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing = true)
+            maxscheme = EpsBoxDominanceFitnessScheme{2}(0.1, is_minimizing = false)
 
             @test numobjectives(minscheme) == numobjectives(maxscheme) == 2
             @test fitness_type(minscheme) === fitness_type(maxscheme) === IndexedTupleFitness{2, Float64}
@@ -324,12 +324,18 @@
             @test hat_compare((0.95, 0.05), (0.96, 0.04), minscheme) == (-1, true)
             @test hat_compare((0.95, 0.05), (0.96, 0.04), maxscheme) == (-1, true)
 
-            @test hat_compare((6.9928266604943286,0.03386770153536918),
-                                (7.007808609410211,0.032833634435236035), minscheme, 0) == (-1, false)
-            @test hat_compare((6.9928266604943286,0.03386770153536918),
-                                (7.007808609410211,0.032833634435236035), minscheme, 1) == (-1, false)
-            @test hat_compare((6.9928266604943286,0.03386770153536918),
-                                (7.007808609410211,0.032833634435236035), minscheme, -1) == (-1, false)
+            @test hat_compare(
+                (6.9928266604943286, 0.03386770153536918),
+                (7.007808609410211, 0.032833634435236035), minscheme, 0
+            ) == (-1, false)
+            @test hat_compare(
+                (6.9928266604943286, 0.03386770153536918),
+                (7.007808609410211, 0.032833634435236035), minscheme, 1
+            ) == (-1, false)
+            @test hat_compare(
+                (6.9928266604943286, 0.03386770153536918),
+                (7.007808609410211, 0.032833634435236035), minscheme, -1
+            ) == (-1, false)
         end
     end
 end

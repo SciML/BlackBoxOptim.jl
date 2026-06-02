@@ -11,8 +11,8 @@ This is the Muller-Marsaglia method as described [here](http://mathworld.wolfram
 """
 function sample_unit_hypersphere(n, num = 1)
     X = randn(n, num)
-    sqrootsums = 1 ./ sqrt.(sum(abs2, X, dims=1))
-    sqrootsums .* X
+    sqrootsums = 1 ./ sqrt.(sum(abs2, X, dims = 1))
+    return sqrootsums .* X
 end
 
 struct RandomDirectionGen <: DirectionGenerator
@@ -34,13 +34,13 @@ struct MirroredRandomDirectionGen <: DirectionGenerator
     function MirroredRandomDirectionGen(numDims, numDirections)
         iseven(numDirections) ||
             throw(ArgumentError("the number of directions must be even"))
-        new(numDims, numDirections)
+        return new(numDims, numDirections)
     end
 end
 
 function directions_for_k(rdg::MirroredRandomDirectionGen, k)
-    r = sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections÷2)
-    [r -r]
+    r = sample_unit_hypersphere(rdg.numDimensions, rdg.numDirections ÷ 2)
+    return [r -r]
 end
 
 const DirectSearchProbabilisticDescentDefaultParameters = ParamsDict(
@@ -50,5 +50,5 @@ const DirectSearchProbabilisticDescentDefaultParameters = ParamsDict(
 function direct_search_probabilistic_descent(problem::OptimizationProblem, parameters::Parameters)
     params = chain(DirectSearchProbabilisticDescentDefaultParameters, parameters)
     params[:DirectionGenerator] = MirroredRandomDirectionGen(numdims(problem), params[:NumDirections])
-    GeneratingSetSearcher(problem, params)
+    return GeneratingSetSearcher(problem, params)
 end

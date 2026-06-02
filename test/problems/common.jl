@@ -5,7 +5,8 @@ function fitness_for_opt(problem, numDimensions, populationSize, numSteps, metho
 
     println("\n$(problem.name), n = $(numdims(problem)), optimizer = $(string(method))")
 
-    res = bboptimize(problem; Method = method,
+    res = bboptimize(
+        problem; Method = method,
         NumDimensions = numDimensions,
         PopulationSize = populationSize,
         MaxSteps = numSteps

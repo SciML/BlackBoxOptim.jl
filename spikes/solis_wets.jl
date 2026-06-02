@@ -1,97 +1,99 @@
-function solis_wets(problem; 
-  max_evals_per_dim = 1e5, ftol = 1e-7,
-  max_success_steps = 5, max_fail_steps = 3,
-  rnggen = (sigma) -> Normal(0, sigma))
+function solis_wets(
+        problem;
+        max_evals_per_dim = 1.0e5, ftol = 1.0e-7,
+        max_success_steps = 5, max_fail_steps = 3,
+        rnggen = (sigma) -> Normal(0, sigma)
+    )
 
-  start_time = time()
+    start_time = time()
 
-  n = numdims(problem)
-  ss = search_space(problem)
-  num_successes = num_failures = 0
-  sigma = sqrt(0.30 * minimum(diameters(ss)))
-  diff = bias = zeros(n)
-  rng = rnggen(sigma)
-  max_evals = max_evals_per_dim * n
+    n = numdims(problem)
+    ss = search_space(problem)
+    num_successes = num_failures = 0
+    sigma = sqrt(0.3 * minimum(diameters(ss)))
+    diff = bias = zeros(n)
+    rng = rnggen(sigma)
+    max_evals = max_evals_per_dim * n
 
-  xbest = rand_individual(ss)
-  termination_reason = "unknown"
+    xbest = rand_individual(ss)
+    termination_reason = "unknown"
 
-  a = BlackBoxOptim.TopListArchive(n, 10)
-  fbest = eval1(xbest, problem)
-  num_fevals = 1
-  add_candidate!(a, fbest, xbest[:], num_fevals)
+    a = BlackBoxOptim.TopListArchive(n, 10)
+    fbest = eval1(xbest, problem)
+    num_fevals = 1
+    add_candidate!(a, fbest, xbest[:], num_fevals)
 
-  while(true)
-    # Terminate if fitness within ftol of known fmin
-    if fitness_is_within_ftol(problem, ftol, fbest)
-      termination_reason = "Within ftol"
-      break
+    while (true)
+        # Terminate if fitness within ftol of known fmin
+        if fitness_is_within_ftol(problem, ftol, fbest)
+            termination_reason = "Within ftol"
+            break
+        end
+
+        if num_fevals > max_evals
+            termination_reason = "Max evals budget exceeded"
+            break
+        end
+
+        diff = rand(rng, n)
+        xplus = xbest + bias + diff
+        fxplus = eval1(xplus, problem)
+        num_fevals += 1
+
+        if fxplus < fbest
+
+            fbest = fxplus
+            add_candidate!(a, fxplus, xplus[:], num_fevals)
+            num_successes += 1
+            num_failures = 0
+            bias = 0.2 * bias + 0.4 * (diff + bias)
+            xbest = xplus
+            println("$(num_fevals): New best, fitness = $(fbest), width = $(width_of_confidence_interval(a, 0.01))")
+
+        else
+
+            xminus = xbest - bias - diff
+            fxminus = eval1(xminus, problem)
+            num_fevals += 1
+
+            if fxminus < fbest
+
+                fbest = fxminus
+                add_candidate!(a, fxminus, xminus[:], num_fevals)
+                num_successes += 1
+                num_failures = 0
+                bias = bias - 0.4 * (diff + bias)
+                xbest = xminus
+                println("$(num_fevals): New best, fitness = $(fbest), width = $(width_of_confidence_interval(a, 0.01))")
+
+            else
+                bias = bias / 2
+                num_failures += 1
+                num_successes = 0
+            end
+
+        end
+
+        if num_successes > max_success_steps
+            sigma = sigma * 2
+            rng = rnggen(sigma)
+            num_successes = 0
+        elseif num_failures > max_fail_steps
+            sigma = max(1.0e-20, sigma / 2)
+            rng = rnggen(sigma)
+            num_failures = 0
+        end
+
     end
 
-    if num_fevals > max_evals
-      termination_reason = "Max evals budget exceeded"
-      break
-    end
-
-    diff = rand(rng, n)
-    xplus = xbest + bias + diff
-    fxplus = eval1(xplus, problem)
-    num_fevals += 1
-
-    if fxplus < fbest
-
-      fbest = fxplus
-      add_candidate!(a, fxplus, xplus[:], num_fevals)
-      num_successes += 1
-      num_failures = 0
-      bias = 0.2 * bias + 0.4 * (diff + bias)
-      xbest = xplus
-      println( "$(num_fevals): New best, fitness = $(fbest), width = $(width_of_confidence_interval(a, 0.01))")
-
-    else
-
-      xminus = xbest - bias - diff
-      fxminus = eval1(xminus, problem)
-      num_fevals += 1
-
-      if fxminus < fbest
-
-        fbest = fxminus
-        add_candidate!(a, fxminus, xminus[:], num_fevals)
-        num_successes += 1
-        num_failures = 0
-        bias = bias - 0.4 * (diff + bias)
-        xbest = xminus
-        println( "$(num_fevals): New best, fitness = $(fbest), width = $(width_of_confidence_interval(a, 0.01))")
-
-      else
-        bias = bias / 2
-        num_failures += 1
-        num_successes = 0
-      end
-
-    end
-
-    if num_successes > max_success_steps
-      sigma = sigma * 2
-      rng = rnggen(sigma)
-      num_successes = 0
-    elseif num_failures > max_fail_steps
-      sigma = max(1e-20, sigma / 2)
-      rng = rnggen(sigma)
-      num_failures = 0
-    end
-
-  end
-
-  return xbest, best_fitness(a), num_fevals, termination_reason, a
+    return xbest, best_fitness(a), num_fevals, termination_reason, a
 end
 
 #type SolisWetsOptimizer <: Optimizer
 #  # Current population: 1st column is current solution, 2nd columnn is current
-#  # candidate to consider. 
+#  # candidate to consider.
 #  pop::Array{Float64, 2}
-#  N::Int      
+#  N::Int
 #  bias::Array{Float64, 1}   # Bias
 #  diff::Array{Float64, 1}   # Latest Diff vector.
 #  sigma::Float64            # Measure of spread in random sampling. Note! Sigma used in stead of rho=sigma^2

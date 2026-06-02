@@ -17,7 +17,7 @@ function predicted_utility(ba::BonesaArchive, x, problem)
 end
 
 function time_is_up(bt::BonesaTuner)
-    time() - bt.start_time >= bt.max_time_seconds
+    return time() - bt.start_time >= bt.max_time_seconds
 end
 
 # Start tuning parameters given a maximum time budget in hours.
@@ -32,19 +32,20 @@ function tune_parameters(bt::BonesaTuner, max_hours = 1.0)
     for i in 1:num_param_vectors(bt)
         if time_is_up(bt)
             # Cut the size of the archive since we did not have time to eval them all... :(
-            bt.parameter_vectors = bt.parameter_vectors[:,1:(i-1)]
-            bt.utilities = bt.utilities[:,1:(i-1)]
+            bt.parameter_vectors = bt.parameter_vectors[:, 1:(i - 1)]
+            bt.utilities = bt.utilities[:, 1:(i - 1)]
             break
         end
-        bt.utilities[:, i] = evaluate_param_vector(bt, bt.parameter_vectors[:,i])
+        bt.utilities[:, i] = evaluate_param_vector(bt, bt.parameter_vectors[:, i])
     end
 
     # Iteratively add to archive as we learn more about which param vectors are good.
-    while( !time_is_up(bt) )
+    while (!time_is_up(bt))
         # Update constants and temp calcs needed to calc pareto strength below
     end
 
     # Select the terminal set (pareto front) of the param vectors.
+    return
 end
 
 # Calc predicted utilities, variance and support as well as pareto dominance
@@ -54,7 +55,7 @@ function calc_temp_values_for_archive(bt::BonesaTuner)
     bt.c = calc_approximate_magic_constant_c(size_of_archive(bt), numdims(bt))
 
     # Calc the good vectors (saved as (boolean) indicator values)
-    mean_actual_utilities = mean(bt.utilities, 2) # Mean per row => mean for each utility value
+    return mean_actual_utilities = mean(bt.utilities, 2) # Mean per row => mean for each utility value
 end
 
 function support_of_vector(bt::BonesaTuner, pvector)
@@ -62,11 +63,11 @@ end
 
 # For now we use random sampling but use lhs here instead, long-term.
 function create_random_parameter_vectors(bt::BonesaTuner, num_vectors)
-    bt.parameter_vectors = rand(num_params(bt), num_vectors)
+    return bt.parameter_vectors = rand(num_params(bt), num_vectors)
 end
 
 function num_utility_values(bt::BonesaTuner)
-    if bt.num_utility_values == false
+    return if bt.num_utility_values == false
         # Evaluate a param vector once to know how many utility values are returned.
         res = evaluate_param_vector_on_problem(bt, bt.problem_set[1], rand(num_params(bt)))
         bt.num_utility_values = length(res) + 1 # Add one for time
@@ -79,14 +80,14 @@ function evaluate_param_vector(bt, pvector)
     parameters = map_to_parameter_values(bt.parameter_set, pvector)
     nu = num_utility_values(bt)
     np = num_problems(bt.problem_set)
-    utilities = zeros(np*nu)
+    utilities = zeros(np * nu)
 
     for i in 1:np
         p = bt.problem_set[i]
-        start = 1 + (i-1) * nu
+        start = 1 + (i - 1) * nu
         tic()
-        utilities[ustart:(ustart+nu-2)] = evaluate_param_vector_on_problem(bt, p, parameters)
-        utilities[ustart+nu-1] = toq()
+        utilities[ustart:(ustart + nu - 2)] = evaluate_param_vector_on_problem(bt, p, parameters)
+        utilities[ustart + nu - 1] = toq()
     end
 
     return utilities
@@ -95,12 +96,12 @@ end
 # Find an approximation to the BONESA magic constant c. It is the value
 # that makes sum(w) == 50, where w is exp(c * normalized_distance(x, y)) for
 # m uniformly, randomly sampled on the l-dimensional hypercube.
-function calc_approximate_magic_constant_c(m, l, num_repeats = 5, tolerance = 1e-3)
+function calc_approximate_magic_constant_c(m, l, num_repeats = 5, tolerance = 1.0e-3)
     # Do a number of random approximations and then average
-    mean([find_approximate_c_given_random_sample_of_points(m, l, tolerance) for i in 1:num_repeats])
+    return mean([find_approximate_c_given_random_sample_of_points(m, l, tolerance) for i in 1:num_repeats])
 end
 
-function find_approximate_c_given_random_sample_of_points(m, l, tolerance = 1e-3)
+function find_approximate_c_given_random_sample_of_points(m, l, tolerance = 1.0e-3)
     # Randomly sample m l-dimensional points
     points = rand(l, m)
 
@@ -110,36 +111,36 @@ function find_approximate_c_given_random_sample_of_points(m, l, tolerance = 1e-3
     # Now calc the distances between points. We only sample them if m is large.
     distances = zeros(Float64, m, m)
     for i in 1:m
-        x = points[:,i]
+        x = points[:, i]
         for j in i:m
-            y = points[:,j]
+            y = points[:, j]
             distances[i, j] = distances[i, j] = std_distance(x, y, std_devs)
         end
     end
 
     # Find a value of c by using bisection so that we are close to 50.0
     f = (c) -> average_sum_of_distances_for_c(c, distances) - 50.0
-    bisection(f, -100.0, 100.0, tolerance)
+    return bisection(f, -100.0, 100.0, tolerance)
 end
 
 # Find a value v that makes abs(f(v)) <= tolerance where a and b are guesses
 # for v where b > a. This implementation assumes that we can find a negative
 # (or positive) value of the function by stepping down (or up) => will not
 # work for any function but throws an ArgumentError after many iterations of trying.
-function bisection(f, a, b = 2*a, tolerance = 1e-5, max_iterations = 1e4)
+function bisection(f, a, b = 2 * a, tolerance = 1.0e-5, max_iterations = 1.0e4)
     if f(a) > 0 && f(b) > 0
         a = step_value_until_changes_sign(f, a, -1.0, max_iterations, max_iterations)
     elseif f(a) < 0 && f(b) < 0
         b = step_value_until_changes_sign(f, b, 1.0, max_iterations, max_iterations)
     end
 
-    p = (a + b)/2
+    p = (a + b) / 2
     error = abs(f(p))
     iterations = 0
     while iterations < max_iterations && error > tolerance
         iterations += 1
-        (f(a)*f(p) < 0) ? (b = p) : (a = p)
-        p = (a + b)/2
+        (f(a) * f(p) < 0) ? (b = p) : (a = p)
+        p = (a + b) / 2
         error = abs(f(p))
     end
     if iterations >= max_iterations
@@ -149,7 +150,7 @@ function bisection(f, a, b = 2*a, tolerance = 1e-5, max_iterations = 1e4)
     end
 end
 
-function step_value_until_changes_sign(func, value::Float64, step_size::Float64 = 1.0, max_iterations = 1e3)
+function step_value_until_changes_sign(func, value::Float64, step_size::Float64 = 1.0, max_iterations = 1.0e3)
     wanted_sign = -1 * sign(func(value))
     iterations = 0
     while iterations < max_iterations && sign(func(value)) != wanted_sign
@@ -165,9 +166,9 @@ function step_value_until_changes_sign(func, value::Float64, step_size::Float64 
 end
 
 function average_sum_of_distances_for_c(c, distances)
-    mean( exp(c * collect(triu(distances))) )
+    return mean(exp(c * collect(triu(distances))))
 end
 
 function std_distance(x, y, std_devs)
-    sqrt(1/l * sum(((x .- y) ./ std_devs).^2))
+    return sqrt(1 / l * sum(((x .- y) ./ std_devs) .^ 2))
 end
