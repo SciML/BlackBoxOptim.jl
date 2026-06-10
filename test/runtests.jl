@@ -1,3 +1,10 @@
+const GROUP = get(ENV, "GROUP", "All")
+
+if GROUP == "QA"
+    include(joinpath(@__DIR__, "qa", "qa.jl"))
+    exit()
+end
+
 if !@isdefined(TimeTestExecution)
     const TimeTestExecution = false
 end
