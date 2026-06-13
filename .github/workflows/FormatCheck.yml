@@ -16,3 +16,5 @@ jobs:
     name: "Format Check"
     uses: "SciML/.github/.github/workflows/runic.yml@v1"
     secrets: "inherit"
+    with:
+      exclude: "spikes examples/benchmarking"
