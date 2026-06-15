@@ -1,3 +1,5 @@
+include("../helper.jl")
+
 @testset "Latin hypercube sampling" begin
     @test_throws DimensionMismatch BlackBoxOptim.Utils.latin_hypercube_sampling(Float64[], [1.0], 1)
     @test_throws DimensionMismatch BlackBoxOptim.Utils.latin_hypercube_sampling([1.0, 2.0], [1.0], 1)

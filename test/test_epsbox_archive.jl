@@ -1,3 +1,7 @@
+include("helper.jl")
+using SpatialIndexing
+SI = SpatialIndexing
+
 @testset "EpsBoxArchive" begin
     # check that frontier elements are mutually nondominated and
     # there are no epsilon-index duplicates

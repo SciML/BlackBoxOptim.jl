@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Bimodal Cauchy Distributions" begin
 
     @testset "sample bimodal cauchy with truncation above 1" begin

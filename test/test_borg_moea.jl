@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "BorgMOEA" begin
     @testset "Schaffer1" begin
         res = bboptimize(

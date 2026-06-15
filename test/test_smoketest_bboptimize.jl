@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "bboptimize() single-objective methods smoketest" begin
     rosenbrock2d(x) = abs2(1.0 - x[1]) + 100.0 * abs2(x[2] - x[1]^2)
 

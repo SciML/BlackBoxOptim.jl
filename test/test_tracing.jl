@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Testing methods diagnostic tracing" begin
     rosenbrock(x) = sum(i -> 100 * abs2(x[i + 1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x) - 1))
     schaffer1(x) = (sum(abs2, x), sum(xx -> abs2(xx - 2.0), x))

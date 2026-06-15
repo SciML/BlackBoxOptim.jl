@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "TopListArchive" begin
     @testset "TopListIndividual" begin
         # test equality

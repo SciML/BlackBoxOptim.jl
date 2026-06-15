@@ -1,3 +1,5 @@
+include("helper.jl")
+
 NumTestRepetitions = 100
 
 @testset "Adaptive differential evolution optimizer" begin
