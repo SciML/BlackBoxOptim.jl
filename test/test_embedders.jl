@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Embedding operators" begin
 
     @testset "RandomBound" begin

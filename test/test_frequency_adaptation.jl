@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Frequency Adaptation" begin
 
     @testset "returns all indices once in the first block" begin

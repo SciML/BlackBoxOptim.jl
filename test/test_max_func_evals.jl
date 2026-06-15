@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "MaxFuncEvals" begin
 
     # It was reported in an GitHub Issue that MaxFuncEvals doesn't have an effect

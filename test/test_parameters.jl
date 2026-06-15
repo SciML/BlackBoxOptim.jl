@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "DictChain" begin
     @testset "Matching keys and value types for get()/set() methods" begin
         dc1 = DictChain{Int, String}()

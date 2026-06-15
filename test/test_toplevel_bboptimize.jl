@@ -1,3 +1,6 @@
+include("helper.jl")
+using Distributed
+
 @testset "Top-level interface" begin
     rosenbrock(x) = sum(i -> 100 * abs2(x[i + 1] - x[i]^2) + abs2(x[i] - 1), Base.OneTo(length(x) - 1))
 

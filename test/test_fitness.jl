@@ -1,3 +1,6 @@
+include("helper.jl")
+using LinearAlgebra
+
 @testset "Fitness" begin
     @testset "hat_compare() Float64" begin
         @test hat_compare(1.0, 2.0) == -1

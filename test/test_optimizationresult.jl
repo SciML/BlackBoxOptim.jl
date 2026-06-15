@@ -1,3 +1,5 @@
+include("helper.jl")
+
 using BlackBoxOptim: general_stop_reason
 
 @testset "general_stop_reason" begin

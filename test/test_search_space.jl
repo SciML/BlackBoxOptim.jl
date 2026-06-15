@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Search space" begin
     @testset "in()" begin
         for i in 1:NumTestRepetitions

@@ -1,3 +1,6 @@
+include("../helper.jl")
+using Random
+
 @testset "Assign ranks within tolerance" begin
 
     @testset "Ranks correctly if none are within tolerance of each other" begin

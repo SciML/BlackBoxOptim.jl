@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Random search" begin
 
     @testset "ask()" begin

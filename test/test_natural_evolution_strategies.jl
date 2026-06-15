@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "sNES" begin
 
     function assign_weights_wrapper(candi_ixs::Vector{Int})

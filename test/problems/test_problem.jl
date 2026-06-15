@@ -1,3 +1,5 @@
+include("../helper.jl")
+
 fsabs(x) = sum(abs, x)
 fsum_abs_and_sq(x) = (sum(abs, x), sum(abs2, x))
 

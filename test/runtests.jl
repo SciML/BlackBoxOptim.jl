@@ -1,125 +1,66 @@
-const GROUP = get(ENV, "GROUP", "All")
+using SciMLTesting
+using SafeTestsets
+using Random
 
-if GROUP == "QA"
-    include(joinpath(@__DIR__, "qa", "qa.jl"))
-    exit()
+# BlackBoxOptim's test suite is not cleanly folder-partitionable: the test files
+# live flat in test/ (plus test/utilities and test/problems) and are enumerated by
+# testset_normal.txt rather than discovered per-folder, and test/problems holds both
+# real test units and shared helper code (common.jl, included only by the heavy
+# manual problem suites). So this uses the explicit-args run_tests form: core_body
+# lists the real Core test files, each run isolated in its own @safetestset module.
+function core_body()
+    # The suite has no per-file seeding and several stochastic tests assert on
+    # optimizer outcomes (e.g. test_set_candidate's "found the injected optimum").
+    # Those are sensitive to the global-RNG state inherited from all preceding
+    # files, so the run is only reproducible if the RNG is pinned up front. Seed
+    # once here so the whole Core run (and CI) is deterministic.
+    Random.seed!(1234)
+
+    @safetestset "Latin hypercube sampling" include("utilities/test_latin_hypercube_sampling.jl")
+    @safetestset "Halton sequence" include("utilities/test_halton_sequence.jl")
+    @safetestset "Assign ranks" include("utilities/test_assign_ranks.jl")
+
+    @safetestset "Parameters" include("test_parameters.jl")
+    @safetestset "Fitness" include("test_fitness.jl")
+    @safetestset "Evaluator" include("test_evaluator.jl")
+    @safetestset "Population" include("test_population.jl")
+    @safetestset "Bimodal Cauchy distribution" include("test_bimodal_cauchy_distribution.jl")
+    @safetestset "Search space" include("test_search_space.jl")
+    @safetestset "Mutation operators" include("test_mutation_operators.jl")
+    @safetestset "Crossover operators" include("test_crossover_operators.jl")
+    @safetestset "Selectors" include("test_selectors.jl")
+    @safetestset "Embedders" include("test_embedders.jl")
+    @safetestset "Frequency adaptation" include("test_frequency_adaptation.jl")
+    @safetestset "Archive" include("test_archive.jl")
+    @safetestset "EpsBox archive" include("test_epsbox_archive.jl")
+    @safetestset "Optimization result" include("test_optimizationresult.jl")
+
+    @safetestset "Random search" include("test_random_search.jl")
+    @safetestset "Differential evolution" include("test_differential_evolution.jl")
+    @safetestset "Adaptive differential evolution" include("test_adaptive_differential_evolution.jl")
+    @safetestset "Natural evolution strategies" include("test_natural_evolution_strategies.jl")
+
+    @safetestset "BORG MOEA" include("test_borg_moea.jl")
+
+    @safetestset "Tracing" include("test_tracing.jl")
+    @safetestset "Top-level bboptimize" include("test_toplevel_bboptimize.jl")
+    @safetestset "Smoketest bboptimize" include("test_smoketest_bboptimize.jl")
+
+    @safetestset "Set candidate" include("test_set_candidate.jl")
+    @safetestset "Max func evals" include("test_max_func_evals.jl")
+
+    @safetestset "Problem" include("problems/test_problem.jl")
+    @safetestset "Single objective problems" include("problems/test_single_objective.jl")
+
+    @safetestset "Generating set search" include("test_generating_set_search.jl")
+    @safetestset "Direct search with probabilistic descent" include("test_direct_search_with_probabilistic_descent.jl")
+    return nothing
 end
 
-if !@isdefined(TimeTestExecution)
-    const TimeTestExecution = false
-end
-
-module BlackBoxOptimTests
-
-    using LinearAlgebra, Random
-    using Printf: @printf, @sprintf
-    using SpatialIndexing
-
-    const SI = SpatialIndexing
-
-    TestDir = first(splitdir(@__FILE__()))
-
-    # If two arguments the second one is filename of a testset file
-    # listing the testfiles to use.
-    if length(ARGS) == 2 && isfile(ARGS[2])
-        test_file_list = ARGS[2]
-    else
-        test_file_list = if isfile(joinpath(TestDir, "testset_current.txt"))
-            joinpath(TestDir, "testset_current.txt")
-        else
-            joinpath(TestDir, "testset_normal.txt")
-        end
-    end
-
-    TestFiles = filter(
-        fn -> isfile(joinpath(TestDir, fn)),
-        readlines(test_file_list)
-    )
-
-    function latest_changed_file(files, dir = "")
-        return files[first(sortperm(map(fn -> mtime(joinpath(dir, fn)), files), rev = true))]
-    end
-
-    # If a first argument is given it must be either:
-    #  all =>           run all test files in the testset
-    #  latestchanged => run only the latest changed file in the testset
-    if length(ARGS) > 0
-        if ARGS[1] == "all"
-            TestFiles = TestFiles # Change nothing so run them all
-        elseif ARGS[1] == "latestchanged"
-            TestFiles = AbstractString[latest_changed_file(TestFiles, TestDir)]
-            println("Testing files: $(TestFiles)")
-        end
-    end
-
-    startclocktime = time()
-    include("helper.jl")
-
-    import Compat.String
-
-    if Main.TimeTestExecution
-
-        function get_git_remote_and_branch()
-            lines = split(read(`git remote -v show`, String), "\n")
-            remote = match(r"[a-z0-9]+\s+([^\s]+)", lines[1]).captures[1]
-            branch = strip(read(`git rev-parse --abbrev-ref HEAD`, String))
-            commit = strip(read(`git rev-parse HEAD`, String))
-            return remote, branch, commit
-        end
-
-        gitremote, gitbranch, gitcommit = get_git_remote_and_branch()
-        gitstr = gitremote * "/" * gitbranch * "/" * gitcommit[1:6]
-        versionstr = string(VERSION)
-
-        using CSV, DataFrames
-
-        TestTimingFileName = "test/timing_testing.csv"
-
-        if isfile("test/timing_testing.csv")
-            timing_data = CSV.read("test/timing_testing.csv")
-        else
-            timing_data = DataFrame(
-                TimeStamp = AbstractString[],
-                Julia = AbstractString[],
-                Git = AbstractString[],
-                TestFile = AbstractString[],
-                Elapsed = Float64[]
-            )
-        end
-
-    end
-
-    starttime = time()
-    @testset "BlackBoxOptim test suite" begin
-
-        for t in TestFiles
-            local test_start_time
-            Main.TimeTestExecution && (test_start_time = time())
-
-            # Including the test file runs the tests in there...
-            include(t)
-
-            if Main.TimeTestExecution
-                elapsed = time() - test_start_time
-                datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
-                push!(timing_data, [datestr, versionstr, gitstr, t, elapsed])
-            end
-            print("."); flush(stdout)
-        end
-        println() # So Base.Test summary is correctly aligned...
-    end
-    elapsed = time() - starttime
-
-    if Main.TimeTestExecution
-        datestr = Libc.strftime("%Y%m%d %H:%M.%S", time())
-        using SHA
-        hash = bytes2hex(sha512(join(map(fn -> read(open(joinpath("test", fn)), String), TestFiles))))[1:16]
-        push!(timing_data, [datestr, versionstr, gitstr, "TOTAL TIME for $(length(TestFiles)) test files, $(hash)", elapsed])
-        CSV.write(TestTimingFileName, timing_data)
-        println("Wrote $(nrow(timing_data)) rows to file $TestTimingFileName")
-    end
-
-    elapsedclock = time() - startclocktime
-    println("Tested $(length(TestFiles)) files in $(round(elapsedclock, digits = 1)) seconds.")
-
-end # module BlackBoxOptimTests
+run_tests(;
+    core = core_body,
+    qa = (; env = joinpath(@__DIR__, "qa"), body = joinpath(@__DIR__, "qa", "qa.jl")),
+    # Curated "All": run only Core. QA stays selectable by name but out of the
+    # aggregate (it has its own CI lane).
+    all = ["Core"],
+)

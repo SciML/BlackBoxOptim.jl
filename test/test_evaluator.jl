@@ -1,3 +1,6 @@
+include("helper.jl")
+using Distributed
+
 function evaluator_tests(make_eval::Function)
     @testset "Basic evaluation with a single-objective function to be minimized" begin
         e = make_eval()

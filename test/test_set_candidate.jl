@@ -1,9 +1,11 @@
+include("helper.jl")
+
 using BlackBoxOptim: set_candidate!, candidate, set_candidates!
 
 # a 2d optimization problem with an optimum at (3.14, 7.2)
 fixed_optimum_prob(x) = (x[1] - 3.14)^2 + (x[2] - 7.2)^4
-const FixedOptimum = [3.14, 7.2]
-const FitnessOptimum = fixed_optimum_prob(FixedOptimum)
+FixedOptimum = [3.14, 7.2]
+FitnessOptimum = fixed_optimum_prob(FixedOptimum)
 
 @testset "set_candidate! for DE population optimizers" begin
     for m in [

@@ -1,3 +1,6 @@
+include("helper.jl")
+using LinearAlgebra
+
 @testset "Random sampling on unit, n-dimensional sphere" begin
 
     uv1 = BlackBoxOptim.sample_unit_hypersphere(1)

@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Differential evolution optimizer" begin
 
     ss = RectSearchSpace(1, (0.0, 10.0))

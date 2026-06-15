@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Generating set search" begin
 
     ss = RectSearchSpace(3, (0.0, 1.0))

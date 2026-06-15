@@ -1,3 +1,5 @@
+include("../helper.jl")
+
 haltonnumber = BlackBoxOptim.Utils.haltonnumber
 haltonsequence = BlackBoxOptim.Utils.haltonsequence
 

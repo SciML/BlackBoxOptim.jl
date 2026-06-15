@@ -1,3 +1,5 @@
+include("../helper.jl")
+
 @testset "Single objective functions" begin
 
     @testset "Sphere" begin

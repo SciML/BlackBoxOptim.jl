@@ -1,3 +1,5 @@
+include("helper.jl")
+
 @testset "Population" begin
 
     @testset "FitPopulation" begin
