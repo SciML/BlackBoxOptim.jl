@@ -3,7 +3,6 @@ module BlackBoxOptim
 using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
 using SpatialIndexing
 using Printf: @printf, @sprintf
-using Compat: String, view
 
 export Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
     bboptimize, bbsetup, compare_optimizers,
@@ -91,7 +90,7 @@ if !isdefined(Base, :get_extension)
 end
 
 module Utils
-    using Random
+    using Random: shuffle!
 
     include("utilities/latin_hypercube_sampling.jl")
     include("utilities/assign_ranks.jl")

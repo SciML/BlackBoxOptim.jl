@@ -25,7 +25,7 @@ struct BimodalCauchy
     )
 end
 
-function Random.rand(distr::BimodalCauchy)
+function Base.rand(distr::BimodalCauchy)
     while true
         value = rand() < distr.mix_prob ? rand(distr.a) : rand(distr.b)
         if value >= 1.0
