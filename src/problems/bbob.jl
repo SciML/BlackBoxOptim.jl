@@ -1,4 +1,4 @@
-# This is based on the COCO (COmparing Continuous Optimizers) source code
+# This is based on the COCO (Comparing Continuous Optimizers) source code
 # and tries to stay close to its methods/functions in order to allow the same
 # type of comparisons in Julia.
 module COCO
@@ -110,7 +110,7 @@ struct F101 <: FSphere{BBOBGaussFunction}
     F101 = new(101, BBOBGaussFunction(0.01))
 end
 
-# Run an optimizer like in the COCO (COmparing Continuous Optimizers) sw,
+# Run an optimizer like in the COCO (Comparing Continuous Optimizers) sw,
 # i.e. with a given number of dimensions, specific target value and max number
 # of function evaluations.
 # COCO method: MY_OPTIMIZER in MY_OPTIMIZER.m

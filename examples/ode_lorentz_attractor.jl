@@ -39,7 +39,7 @@ beta = 8.0 / 3.0
 real_params = [sigma, rho, beta]
 
 # "Play" an ODE from a starting point and into the future given a sequence of time steps.
-# Put the restults into `states`
+# Put the results into `states`
 function calc_states!(
         states::AbstractMatrix{Float64},
         params::AbstractVector{Float64}, odefunc!::Function,

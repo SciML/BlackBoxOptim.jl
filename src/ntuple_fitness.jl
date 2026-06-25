@@ -104,7 +104,7 @@ EpsDominanceFitnessScheme{N}(
     ϵ::F; fitness_type::Type{F} = Float64,
     is_minimizing::Bool = true, aggregator::AGG = sum
 ) where {N, F <: Number, AGG} =
-    EpsDominanceFitnessScheme{N, fitness_type}(ϵ; is_minimizing = is_minimizing, aggegator = aggregator)
+    EpsDominanceFitnessScheme{N, fitness_type}(ϵ; is_minimizing = is_minimizing, aggregator = aggregator)
 
 # comparison for minimizing ϵ-dominance scheme
 function hat_compare_ϵ(
