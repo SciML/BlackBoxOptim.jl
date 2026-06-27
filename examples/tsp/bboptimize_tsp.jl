@@ -52,7 +52,7 @@ function apply(m::LargestRankedValueMapping, v::Vector{Float64})
     return rov
 end
 
-# Let's try something of our own, i.e. truncate/floor countinuous
+# Let's try something of our own, i.e. truncate/floor continuous
 # values to integers, then handle the duplicates by assigning the
 # remaining values based on which of the remaining ones it is closest
 # to.
