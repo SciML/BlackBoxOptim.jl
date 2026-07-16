@@ -41,7 +41,18 @@ select
 apply(o::MutationOperator, parents::AbstractVector{<:AbstractVector{<:Real}}) =
     map(p -> apply(o, p), parents)
 
+"""
+    numchildren(operator::GeneticOperator)
+
+Return the number of child candidates produced by `operator`.
+"""
 numchildren(o::GeneticOperator) = 1
+
+"""
+    numparents(operator::GeneticOperator)
+
+Return the number of parent candidates consumed by `operator`.
+"""
 numparents(o::MutationOperator) = 1 # But it will apply to each parent separately if given more than one...
 
 numparents(o::CrossoverOperator{NP, NC}) where {NP, NC} = NP::Int
@@ -50,7 +61,11 @@ numchildren(o::CrossoverOperator{NP, NC}) where {NP, NC} = NC::Int
 numparents(o::EmbeddingOperator) = 1
 numchildren(o::EmbeddingOperator) = 1
 
-# wrapper for multi-children variant of apply!() for single-child xover operators
+"""
+    apply!(operator::GeneticOperator, target, args...)
+
+Apply a genetic operator in place to one or more target candidates.
+"""
 function apply!(
         xover::CrossoverOperator{NP, 1},
         targets::AbstractVector{<:AbstractIndividual}, target_indices::AbstractVector{Int},

@@ -6,13 +6,42 @@ abstract type OptimizationProblem{FS <: FitnessScheme} end
 
 # common definitions for `OptimizationProblem`
 # (enforce field names of subtypes)
+"""
+    name(problem::OptimizationProblem)
+
+Return the display name of an optimization problem or optimizer.
+"""
 name(p::OptimizationProblem) = p.name
+
+"""
+    fitness_scheme_type(problem_type::Type{<:OptimizationProblem})
+
+Return the fitness scheme type associated with an optimization problem type.
+"""
 fitness_scheme_type(::Type{<:OptimizationProblem{FS}}) where {FS} = FS
 fitness_type(::Type{P}) where {P <: OptimizationProblem} = fitness_type(fitness_scheme_type(P))
+
+"""
+    fitness_scheme(problem::OptimizationProblem)
+
+Return the fitness scheme used to compare objective values for `problem`.
+"""
 fitness_scheme(p::OptimizationProblem) = p.fitness_scheme
 fitness_type(p::P) where {P <: OptimizationProblem} = fitness_type(P)
 numobjectives(p::OptimizationProblem) = numobjectives(fitness_scheme(p))
+
+"""
+    search_space(problem::OptimizationProblem)
+
+Return the search space from which candidates for `problem` are drawn.
+"""
 search_space(p::OptimizationProblem) = p.search_space
+
+"""
+    numdims(x)
+
+Return the number of dimensions in a problem, search space, population, or optimizer.
+"""
 numdims(p::OptimizationProblem) = numdims(search_space(p))
 
 """
@@ -53,6 +82,11 @@ mutable struct FunctionBasedProblem{F, FS <: FitnessScheme, SS <: SearchSpace, F
     end
 end
 
+"""
+    objfunc(problem::FunctionBasedProblem)
+
+Return the objective function wrapped by a function-based problem.
+"""
 objfunc(p::FunctionBasedProblem) = p.objfunc
 
 """
@@ -68,6 +102,11 @@ Base.copy(p::FunctionBasedProblem) =
     p.fitness_scheme, p.search_space, p.opt_value
 )
 
+"""
+    opt_value(problem::FunctionBasedProblem)
+
+Return the known optimal fitness value for `problem`, or `nothing` if unknown.
+"""
 opt_value(p::FunctionBasedProblem) = p.opt_value
 
 # checks if the optimal fitness is reached for bounded scalar problem

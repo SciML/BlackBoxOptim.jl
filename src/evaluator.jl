@@ -67,7 +67,7 @@ abstract type AbstractAsyncEvaluator{P <: OptimizationProblem} <: Evaluator{P} e
 The abstract base type for the fitness evaluation jobs returned by
 [`async_update_fitness!`](@ref) and accepted by [`sync_update_fitness`](@ref).
 
-One can also check whether the fitness completed with [`Base.isready`](@ref) method.
+One can also check whether the fitness completed with `Base.isready`.
 """
 abstract type AbstractFitnessEvaluationJob{F} end
 
@@ -78,7 +78,7 @@ abstract type AbstractFitnessEvaluationJob{F} end
 
 Asynchronously calculate the fitnesses.
 *candidates* should support the `iterate()` interface and return
-[`Candidate`](@ref) elements.
+`Candidate` elements.
 
 Returns [`AbstractFitnessEvaluationJob`](@ref) or `nothing` if *candidates*
 does not contain any candidates.

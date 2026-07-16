@@ -91,6 +91,12 @@ const DXNES_DefaultOptions = chain(
     )
 )
 
+"""
+    dxnes(problem::OptimizationProblem, parameters)
+
+Create a distance-weighted exponential natural evolution strategy optimizer
+for `problem`.
+"""
 function dxnes(problem::OptimizationProblem, parameters)
     params = chain(DXNES_DefaultOptions, parameters)
     embed = RandomBound(search_space(problem))

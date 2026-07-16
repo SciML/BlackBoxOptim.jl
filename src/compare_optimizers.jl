@@ -1,3 +1,8 @@
+"""
+    compare_optimizers(problem, parameters = EMPTY_PARAMS; Methods, kwargs...)
+
+Run several optimizer methods on the same problem and rank them by best fitness.
+"""
 function compare_optimizers(
         functionOrProblem, parameters::Parameters = EMPTY_PARAMS;
         Methods = BlackBoxOptim.SingleObjectiveMethodNames, kwargs...

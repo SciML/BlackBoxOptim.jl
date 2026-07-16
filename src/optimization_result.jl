@@ -53,6 +53,12 @@ stop_reason(or::OptimizationResults) = or.stop_reason
 iterations(or::OptimizationResults) = or.iterations
 start_time(or::OptimizationResults) = or.start_time
 elapsed_time(or::OptimizationResults) = or.elapsed_time
+
+"""
+    parameters(result::OptimizationResults)
+
+Return the effective parameter dictionary used by an optimization run.
+"""
 parameters(or::OptimizationResults) = or.parameters
 f_calls(or::OptimizationResults) = or.f_calls
 
@@ -79,8 +85,20 @@ end
 # Alternative nomenclature that mimics Optim.jl more closely.
 # FIXME should be it be enabled only for MinimizingFitnessScheme?
 Base.minimum(or::OptimizationResults) = best_candidate(or)
+
+"""
+    f_minimum(result::OptimizationResults)
+
+Return the best fitness value from an optimization result.
+"""
 f_minimum(or::OptimizationResults) = best_fitness(or)
+
 # FIXME lookup stop_reason
+"""
+    iteration_converged(result::OptimizationResults)
+
+Return `true` when the result used all configured optimization iterations.
+"""
 iteration_converged(or::OptimizationResults) = iterations(or) >= parameters(or)[:MaxSteps]
 isinterrupted(or::OptimizationResults) = stop_reason(or) == "InterruptException()"
 
@@ -137,6 +155,11 @@ end
 
 ArchiveOutput(archive::EpsBoxArchive) = EpsBoxArchiveOutput(archive)
 
+"""
+    pareto_frontier(result::OptimizationResults)
+
+Return the Pareto frontier stored in a multi-objective optimization result.
+"""
 pareto_frontier(or::OptimizationResults) = or.archive_output.frontier
 
 """
@@ -153,4 +176,9 @@ end
 
 MethodOutput(optimizer::PopulationOptimizer) = PopulationOptimizerOutput(optimizer)
 
+"""
+    population(result::OptimizationResults)
+
+Return the final optimizer population stored in an optimization result.
+"""
 population(or::OptimizationResults) = or.method_output.population

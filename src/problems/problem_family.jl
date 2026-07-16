@@ -67,12 +67,36 @@ end
 
 @deprecate fixed_dim_problem instantiate
 
+@doc """
+    fixed_dim_problem(problem_or_family, ndim::Int)
+
+Deprecated alias for `instantiate(problem_or_family, ndim)`.
+""" fixed_dim_problem
+
+"""
+    MinimizationProblemFamily(f, name, range[, fmin])
+
+Create a family of function-based minimization problems over `range`.
+
+# Arguments
+
+- `f`: objective function.
+- `name`: problem family name.
+- `range`: default bounds for each generated dimension.
+- `fmin`: optional known minimum fitness value.
+"""
 MinimizationProblemFamily(f::Function, name::String, range::ParamBounds, fmin::Float64) =
     FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range, fmin)
 
 MinimizationProblemFamily(f::Function, name::String, range::ParamBounds) =
     FunctionBasedProblemFamily(f, name, MinimizingFitnessScheme, range)
 
+"""
+    minimization_problem(f, name, range, ndim[, fmin])
+    minimization_problem(f, range, ndim)
+
+Create a fixed-dimensional function-based minimization problem.
+"""
 minimization_problem(f::Function, name::String, range::ParamBounds, ndim::Int) =
     instantiate(MinimizationProblemFamily(f, name, range), ndim)
 

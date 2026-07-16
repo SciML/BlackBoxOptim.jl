@@ -96,6 +96,11 @@ function adaptive_diffevo(
     )
 end
 
+"""
+    adaptive_de_rand_1_bin(problem, parameters = EMPTY_PARAMS[, name])
+
+Create the adaptive `DE/rand/1/bin` differential-evolution optimizer.
+"""
 adaptive_de_rand_1_bin(
     problem::OptimizationProblem,
     options::Parameters = EMPTY_PARAMS,
@@ -103,6 +108,12 @@ adaptive_de_rand_1_bin(
 ) =
     adaptive_diffevo(problem, options, name)
 
+"""
+    adaptive_de_rand_1_bin_radiuslimited(problem, parameters = EMPTY_PARAMS[, name])
+
+Create the adaptive `DE/rand/1/bin` optimizer with radius-limited parent
+selection.
+"""
 adaptive_de_rand_1_bin_radiuslimited(
     problem::OptimizationProblem,
     options::Parameters = EMPTY_PARAMS,
