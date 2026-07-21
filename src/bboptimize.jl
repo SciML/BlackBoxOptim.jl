@@ -65,7 +65,7 @@ The optimization method parameters could be specified via `kwargs` or `parameter
 
 Returns `OptimizationResults` instance.
 
-See also `bbsetup()` and [`BlackBoxOptim.OptRunController`](@ref) for a full list of supported parameters.
+See also `bbsetup()` and `BlackBoxOptim.OptRunController` for a full list of supported parameters.
 """
 function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
     if length(kwargs) > 0
@@ -110,7 +110,7 @@ The optimization method parameters could be specified via `kwargs` or `parameter
 Returns the initialized `OptController` instance. To actually run the method
 call `bboptimize()` or `run!()`.
 
-See also [BlackBoxOptim.OptRunController](@ref) for a full list of supported parameters.
+See also `BlackBoxOptim.OptRunController` for a full list of supported parameters.
 """
 function bbsetup(functionOrProblem, parameters::Parameters = EMPTY_PARAMS; kwargs...)
     parameters = chain(convert(ParamsDict, parameters), kwargs2dict(kwargs))

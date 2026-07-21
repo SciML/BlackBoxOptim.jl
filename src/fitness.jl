@@ -19,6 +19,13 @@ Get the type of fitness values for fitness scheme `fs`.
 """
 fitness_type(::Type{<:FitnessScheme{F}}) where {F} = F
 fitness_type(fs::FitnessScheme) = fitness_type(typeof(fs))
+
+"""
+    fitness_eltype(fs::FitnessScheme)
+    fitness_eltype(fs_type::Type{<:FitnessScheme})
+
+Return the scalar element type used by numeric fitness values in `fs`.
+"""
 fitness_eltype(::Type{<:FitnessScheme{F}}) where {F <: Number} = F
 fitness_eltype(fs::FitnessScheme) = fitness_eltype(typeof(fs))
 
@@ -46,13 +53,48 @@ are better (`true`) or worse (`false`).
 struct ScalarFitnessScheme{MIN} <: RatioFitnessScheme{Float64}
 end
 
+"""
+    MinimizingFitnessScheme
+
+Scalar fitness scheme where smaller values are better.
+"""
 const MinimizingFitnessScheme = ScalarFitnessScheme{true}()
+
+"""
+    MaximizingFitnessScheme
+
+Scalar fitness scheme where larger values are better.
+"""
 const MaximizingFitnessScheme = ScalarFitnessScheme{false}()
 
+"""
+    is_minimizing(scheme::FitnessScheme)
+
+Return `true` when lower fitness values are better for `scheme`.
+"""
 is_minimizing(::ScalarFitnessScheme{MIN}) where {MIN} = MIN
+
+"""
+    nafitness(T::Type)
+    nafitness(scheme::FitnessScheme)
+
+Return the sentinel value used for a missing or unevaluated fitness.
+"""
 nafitness(::Type{F}) where {F <: Number} = convert(F, NaN)
 @inline nafitness(fs::FitnessScheme) = nafitness(fitness_type(fs))
+
+"""
+    isnafitness(fitness, scheme::FitnessScheme)
+
+Return `true` when `fitness` is the unevaluated sentinel for `scheme`.
+"""
 isnafitness(f::F, ::RatioFitnessScheme{F}) where {F <: Number} = isnan(f)
+
+"""
+    numobjectives(scheme::FitnessScheme)
+
+Return the number of objectives represented by `scheme`.
+"""
 numobjectives(::RatioFitnessScheme) = 1
 
 """
@@ -72,6 +114,13 @@ end
 
 # FIXME do we need it? it might be confused with problem's fitness bounds
 worst_fitness(fs::FitnessScheme) = is_minimizing(fs) ? Inf : (-Inf)
+
+"""
+    best_fitness(x)
+
+Return the best fitness represented by a fitness scheme, archive, or
+optimization result.
+"""
 best_fitness(fs::FitnessScheme) = -worst_fitness(fs)
 
 hat_compare(a1::Number, a2::Number) =
@@ -93,8 +142,25 @@ function hat_compare(f1, f2, s::RatioFitnessScheme)
     end
 end
 
+"""
+    is_better(f1, f2, scheme::FitnessScheme)
+
+Return `true` when `f1` is better than `f2` according to `scheme`.
+"""
 is_better(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == -1
+
+"""
+    is_worse(f1, f2, scheme::FitnessScheme)
+
+Return `true` when `f1` is worse than `f2` according to `scheme`.
+"""
 is_worse(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 1
+
+"""
+    same_fitness(f1, f2, scheme::FitnessScheme)
+
+Return `true` when `f1` and `f2` compare as equal under `scheme`.
+"""
 same_fitness(f1, f2, scheme::FitnessScheme) = hat_compare(f1, f2, scheme) == 0
 
 struct HatCompare{FS <: FitnessScheme}

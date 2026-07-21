@@ -40,6 +40,11 @@ mutable struct FrequencyAdapter
     end
 end
 
+"""
+    frequencies(adapter::FrequencyAdapter)
+
+Return the current sampling weights used by a frequency adapter.
+"""
 frequencies(fa::FrequencyAdapter) = weights(fa.p)
 
 """

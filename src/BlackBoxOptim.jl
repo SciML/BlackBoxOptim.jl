@@ -1,3 +1,9 @@
+"""
+    BlackBoxOptim
+
+Black-box optimization algorithms and utilities for optimizing objective
+functions without requiring gradients.
+"""
 module BlackBoxOptim
 
 using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
@@ -152,6 +158,20 @@ include("compare_optimizers.jl")
 # Problems for testing
 include(joinpath("problems", "single_objective.jl"))
 include(joinpath("problems", "multi_objective.jl"))
+
+"""
+    Problems
+
+Namespace for bundled example optimization problems.
+
+`Problems.examples` maps problem names to `OptimizationProblem` instances or
+`FunctionBasedProblemFamily` values.
+"""
+module Problems
+    using ..BlackBoxOptim: example_problems
+
+    const examples = example_problems
+end
 
 # GUIs and front-ends (to really use it, one needs HTTP to enable BlackBoxOptimRealtimePlotServerExt)
 include(joinpath("gui", "realtime_plot.jl"))

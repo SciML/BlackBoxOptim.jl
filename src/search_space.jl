@@ -77,6 +77,30 @@ dimdelta(ss::RectSearchSpace, i::Integer) = ss.dimdelta[i]
 @deprecate deltas(ss) dimdelta(ss)
 @deprecate diameters(ss) dimdelta(ss)
 
+@doc """
+    mins(ss)
+
+Deprecated alias for `dimmin(ss)`.
+""" mins
+
+@doc """
+    maxs(ss)
+
+Deprecated alias for `dimmax(ss)`.
+""" maxs
+
+@doc """
+    deltas(ss)
+
+Deprecated alias for `dimdelta(ss)`.
+""" deltas
+
+@doc """
+    diameters(ss)
+
+Deprecated alias for `dimdelta(ss)`.
+""" diameters
+
 """
     dimrange(ss::SearchSpace, [i::Integer])
 
@@ -87,8 +111,20 @@ for each dimension if no `i` given.
 dimrange(ss::RectSearchSpace, i::Integer) = (dimmin(ss, i), dimmax(ss, i))
 @deprecate range_for_dim(ss, i) dimrange(ss, i)
 
+@doc """
+    range_for_dim(ss, i)
+
+Deprecated alias for `dimrange(ss, i)`.
+""" range_for_dim
+
 dimrange(ss::RectSearchSpace) = tuple.(dimmin(ss), dimmax(ss))
 @deprecate ranges(ss) dimrange(ss)
+
+@doc """
+    ranges(ss)
+
+Deprecated alias for `dimrange(ss)`.
+""" ranges
 
 """
     in(ind::AbstractIndividual, ss::SearchSpace)
@@ -155,6 +191,13 @@ Base.vcat(
 )
 
 # all dimensions are continuous
+"""
+    dimdigits(ss::SearchSpace[, i])
+
+Return the decimal precision for each dimension, or a single dimension `i`.
+
+Negative values denote continuous dimensions.
+"""
 dimdigits(ss::ContinuousRectSearchSpace, i::Integer) = -1
 dimdigits(ss::ContinuousRectSearchSpace) = fill(-1, numdims(ss))
 
@@ -250,6 +293,12 @@ RectSearchSpace(numdims::Integer, range = (0.0, 1.0); dimdigits::Union{Integer, 
 
 @deprecate symmetric_search_space(numdims, range = (0.0, 1.0); dimdigits = nothing) RectSearchSpace(numdims, range, dimdigits = dimdigits)
 
+@doc """
+    symmetric_search_space(numdims, range = (0.0, 1.0); dimdigits = nothing)
+
+Deprecated alias for `RectSearchSpace(numdims, range; dimdigits)`.
+""" symmetric_search_space
+
 # round x to fit ss requirements
 # by default it does nothing
 _round!(x::Union{AbstractVector, AbstractMatrix}, ss::RectSearchSpace) = x
@@ -305,3 +354,9 @@ function rand_individuals(ss::RectSearchSpace, n::Integer; method::Symbol = :lat
 end
 
 @deprecate rand_individuals_lhs(ss::RectSearchSpace, n::Integer) rand_individuals(ss, n, method = :latin_hypercube)
+
+@doc """
+    rand_individuals_lhs(ss::RectSearchSpace, n::Integer)
+
+Deprecated alias for `rand_individuals(ss, n; method = :latin_hypercube)`.
+""" rand_individuals_lhs

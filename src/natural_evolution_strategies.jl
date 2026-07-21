@@ -67,6 +67,11 @@ const NES_DefaultOptions = ParamsDict(
     :max_sigma => 1.0e+10      # Maximal sigma
 )
 
+"""
+    separable_nes(problem::OptimizationProblem, parameters)
+
+Create a separable natural evolution strategy optimizer for `problem`.
+"""
 function separable_nes(problem::OptimizationProblem, parameters)
     params = chain(NES_DefaultOptions, parameters)
     embed = RandomBound(search_space(problem))
@@ -296,6 +301,11 @@ const XNES_DefaultOptions = chain(
     )
 )
 
+"""
+    xnes(problem::OptimizationProblem, parameters)
+
+Create an exponential natural evolution strategy optimizer for `problem`.
+"""
 function xnes(problem::OptimizationProblem, parameters)
     params = chain(XNES_DefaultOptions, parameters)
     embed = RandomBound(search_space(problem))

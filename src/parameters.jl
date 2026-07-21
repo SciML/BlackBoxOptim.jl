@@ -83,9 +83,19 @@ end
 # merge() grows horizontally (extends dicts vector),
 # whereas chain() grows vertically
 # (references its two arguments in the new 2-element dicts vector)
+"""
+    chain(p1::AbstractDict, p2::AbstractDict, ...)
+
+Create a `DictChain` where later arguments have higher lookup priority.
+"""
 chain(p1::AbstractDict{K, V}, p2::AbstractDict{K, V}) where {K, V} = DictChain(p2, p1)
 chain(p1::AbstractDict{K, V}, p2::AbstractDict{K, V}...) where {K, V} = DictChain(chain(p2...), p1)
 
+"""
+    flatten(parameters)
+
+Convert chained parameter dictionaries to a single dictionary.
+"""
 flatten(d::AbstractDict) = d
 flatten(d::DictChain{K, V}) where {K, V} = convert(Dict{K, V}, d)
 
@@ -107,6 +117,10 @@ const Parameters = AbstractDict{Symbol, Any}
 The default parameters storage in `BlackBoxOptim`.
 """
 const ParamsDict = Dict{Symbol, Any}
+
+"""
+The default chained parameter storage in `BlackBoxOptim`.
+"""
 const ParamsDictChain = DictChain{Symbol, Any}
 
 """

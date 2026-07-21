@@ -85,12 +85,35 @@ mutable struct TopListArchive{F <: Number, FS <: FitnessScheme} <: Archive{F, FS
 end
 
 fitness_scheme(a::TopListArchive) = a.fit_scheme
+
+"""
+    capacity(a)
+
+Return the maximum number of candidates retained by archive `a`.
+"""
 capacity(a::TopListArchive) = a.capacity
 Base.length(a::TopListArchive) = length(a.candidates)
 Base.isempty(a::TopListArchive) = isempty(a.candidates)
 
+"""
+    best_candidate(x)
+
+Return the best candidate stored in an archive or optimization result.
+"""
 best_candidate(a::TopListArchive) = a.candidates[1].params
+
+"""
+    best_fitness(x)
+
+Return the best fitness stored in an archive or optimization result.
+"""
 best_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[1]) : nafitness(fitness_scheme(a))
+
+"""
+    last_top_fitness(a::TopListArchive)
+
+Return the worst fitness currently retained in the top-list archive.
+"""
 last_top_fitness(a::TopListArchive) = !isempty(a.candidates) ? fitness(a.candidates[end]) : nafitness(fitness_scheme(a))
 
 """
@@ -185,6 +208,18 @@ function fitness_history_csv_header(a::Archive)
     return "Date,Time,ElapsedTime,Magnitude,NumFuncEvals,FitnessImprovementRatio,Fitness"
 end
 
+"""
+    save_fitness_history_to_csv_file(a::Archive, filename = "fitness_history.csv"; kwargs...)
+
+Append the archive fitness history to a CSV file.
+
+# Keywords
+
+- `header_prefix`: text prepended to the CSV header.
+- `line_prefix`: text prepended to each row.
+- `include_header`: whether to write the header row.
+- `bestfitness`: optional known optimum used to add a distance-to-optimum column.
+"""
 function save_fitness_history_to_csv_file(
         a::Archive, filename = "fitness_history.csv";
         header_prefix = "", line_prefix = "",

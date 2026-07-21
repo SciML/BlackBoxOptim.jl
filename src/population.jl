@@ -24,6 +24,11 @@ The simplest `Population` implementation -- a matrix of floats, each column is a
 """
 const PopulationMatrix = Matrix{Float64}
 
+"""
+    popsize(population)
+
+Return the number of persistent individuals in a population.
+"""
 popsize(pop::AbstractPopulationMatrix) = size(pop, 2)
 numdims(pop::AbstractPopulationMatrix) = size(pop, 1)
 params_mean(pop::AbstractPopulationMatrix) = mean(pop, dims = 1)

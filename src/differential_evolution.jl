@@ -8,6 +8,12 @@ const DE_DefaultOptions = chain(
 
 # FIXME DifferentialEvolution is just a specific case of this optimizer,
 # should it be called EvolutionaryOptimizer?
+"""
+    DiffEvoOpt
+
+Population optimizer implementing differential-evolution style mutation,
+crossover, selection, and search-space embedding.
+"""
 mutable struct DiffEvoOpt{P <: Population, S <: IndividualsSelector, M <: GeneticOperator, E <: EmbeddingOperator} <: PopulationOptimizer
     # TODO when sampler and bound would be parameterized, name is no longer required -- as everything is seen in the type name
     name::String

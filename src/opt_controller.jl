@@ -429,8 +429,26 @@ OptController(
     OptController{O, P}(optimizer, problem, params, OptRunController{O}[])
 
 optimizer(oc::OptController) = oc.optimizer
+
+"""
+    problem(controller::OptController)
+
+Return the optimization problem managed by `controller`.
+"""
 problem(oc::OptController) = oc.problem
+
+"""
+    numruns(controller::OptController)
+
+Return the number of completed or recorded runs in `controller`.
+"""
 numruns(oc::OptController) = length(oc.runcontrollers)
+
+"""
+    lastrun(controller::OptController)
+
+Return the most recent `OptRunController` recorded by `controller`.
+"""
 lastrun(oc::OptController) = oc.runcontrollers[end]
 
 """
