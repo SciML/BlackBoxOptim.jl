@@ -3,7 +3,6 @@ using JET
 
 run_qa(
     BlackBoxOptim;
-    explicit_imports = true,
     # Genuine Aqua findings tracked in
     # https://github.com/SciML/BlackBoxOptim.jl/issues/268 — kept @test_broken so
     # the QA group is green and each flips to "unexpectedly passing" once fixed.
@@ -19,8 +18,11 @@ run_qa(
     # environment no longer reports them, so keep the broken marker only where
     # JET still finds those package issues.
     jet_broken = VERSION >= v"1.11",
+    reexports_allow = (
+        :Individual, :ParamBounds, :Parameters, :ParamsDict, :minimum,
+    ),
     api_docs_kwargs = (;
-        rendered = true,
+        # Exported Base.minimum overload; its documentation is owned by Base.
         rendered_ignore = (:minimum,),
     ),
     ei_kwargs = (;
