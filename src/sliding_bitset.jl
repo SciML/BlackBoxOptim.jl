@@ -28,7 +28,7 @@ function Base.push!(set::SlidingBitset, el::Integer)
         while (set.max_el > set.max_seq_el) && in(set.els, set.max_seq_el + 1)
             set.max_seq_el += 1
         end
-        if !isempty(set.els) && Base._div64(set.max_seq_el) > set.els.offset + SLIDE_OFFSET
+        if !isempty(set.els) && set.max_seq_el ÷ 64 > set.els.offset + SLIDE_OFFSET
             # slide els bitset
             len = length(set.els.bits)
             if len > SLIDE_OFFSET

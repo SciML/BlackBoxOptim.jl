@@ -29,9 +29,6 @@ Return the scalar element type used by numeric fitness values in `fs`.
 fitness_eltype(::Type{<:FitnessScheme{F}}) where {F <: Number} = F
 fitness_eltype(fs::FitnessScheme) = fitness_eltype(typeof(fs))
 
-# trivial convert() between calculated and archived fitness
-Base.convert(::Type{F}, fit::F, fit_scheme::FitnessScheme{F}) where {F} = fit
-
 # ordering induced by the fitness scheme
 # FIXME enable once v0.5 issue #14919 is fixed
 # (fs::FitnessScheme{F}){F}(x::F, y::F) = is_better(x, y, fs)

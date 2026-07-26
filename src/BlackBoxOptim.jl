@@ -6,9 +6,24 @@ functions without requiring gradients.
 """
 module BlackBoxOptim
 
-using Distributions, StatsBase, Random, LinearAlgebra, Printf, Distributed, Compat
-using SpatialIndexing
+import Compat
+import Distributed
+using Distributed: RemoteChannel, remotecall_fetch, workers
+import Distributions
+using Distributions: Categorical, Cauchy, Distribution, Normal, rate, scale
+import LinearAlgebra
+using LinearAlgebra: Diagonal, I, isposdef, mul!, norm, svd, tr
+import Printf
 using Printf: @printf, @sprintf
+import Random
+using Random: rand!, randn!, randperm, shuffle!
+import SpatialIndexing
+import Statistics
+using Statistics: mean, median, std
+import StatsAPI
+using StatsAPI: fit, weights
+import StatsBase
+using StatsBase: Weights, sample, wsum
 
 export Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
     bboptimize, bbsetup, compare_optimizers,
@@ -20,7 +35,7 @@ export Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
     XNESOpt, xnes, dxnes,
 
     # Parameters
-    DictChain, Parameters, ParamsDictChain, ParamsDict,
+    DictChain, ParamsDictChain,
     chain, flatten,
 
     # Fitness
@@ -59,14 +74,14 @@ export Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
     width_of_confidence_interval, fitness_improvement_potential,
 
     # OptimizationResults
-    minimum, f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
+    f_minimum, iteration_converged, parameters, population, pareto_frontier, params,
     archived_fitness,
 
     # OptController
     numruns, lastrun, problem,
 
     # Search spaces
-    ParamBounds, Individual, SearchSpace, FixedDimensionSearchSpace,
+    SearchSpace, FixedDimensionSearchSpace,
     RectSearchSpace, ContinuousRectSearchSpace, MixedPrecisionRectSearchSpace,
     numdims, dimmin, dimmax, dimdelta, dimrange, dimdigits,
     rand_individual, rand_individuals,
@@ -90,10 +105,6 @@ export Optimizer, AskTellOptimizer, SteppingOptimizer, PopulationOptimizer,
     # Utilities
     FrequencyAdapter, update!, frequencies,
     name
-
-if !isdefined(Base, :get_extension)
-    using Requires
-end
 
 module Utils
     using Random: shuffle!
@@ -147,7 +158,7 @@ include("borg_moea.jl")
 #include("behavioral_space.jl")
 
 # End-user/top-level interface functions
-include(joinpath("problems", "problem_family.jl"))
+include("problems/problem_family.jl")
 include("optimization_methods.jl")
 include("default_parameters.jl")
 include("optimization_result.jl")
@@ -156,8 +167,8 @@ include("bboptimize.jl")
 include("compare_optimizers.jl")
 
 # Problems for testing
-include(joinpath("problems", "single_objective.jl"))
-include(joinpath("problems", "multi_objective.jl"))
+include("problems/single_objective.jl")
+include("problems/multi_objective.jl")
 
 """
     Problems
@@ -174,22 +185,6 @@ module Problems
 end
 
 # GUIs and front-ends (to really use it, one needs HTTP to enable BlackBoxOptimRealtimePlotServerExt)
-include(joinpath("gui", "realtime_plot.jl"))
-
-# Some users are reporting pre-compilation problems when the code below is included
-# so for now we exclude it.
-#@static if !isdefined(Base, :get_extension)
-#    function __init__()
-#        @require Sockets = "6462fe0b-24de-5631-8697-dd941f90decc" begin
-#            @require HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3" begin
-#                try
-#                    include("../ext/BlackBoxOptimRealtimePlotServerExt.jl")
-#                catch err
-#                    println("Error during pre-compilation, when loading the gui extension, ", err)
-#                end
-#            end
-#        end
-#    end
-#end
+include("gui/realtime_plot.jl")
 
 end # module BlackBoxOptim

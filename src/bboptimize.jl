@@ -89,6 +89,11 @@ function bboptimize(optctrl::OptController, x0 = nothing; kwargs...)
     return run!(optctrl)
 end
 
+function bboptimize(optctrl::OptController, parameters::Parameters; kwargs...)
+    update_parameters!(optctrl, parameters)
+    return bboptimize(optctrl, nothing; kwargs...)
+end
+
 function bboptimize(functionOrProblem, x0, parameters::Parameters = EMPTY_PARAMS; kwargs...)
     optctrl = bbsetup(functionOrProblem, parameters; kwargs...)
     return bboptimize(optctrl, x0)

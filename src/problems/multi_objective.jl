@@ -65,20 +65,15 @@ end
 
 Euclidean distance from `a` to `b`.
 """
-@generated function distance(a::NTuple{N, F}, b::NTuple{N, F}) where {N, F}
-    return quote
-        res = 0.0
-        Base.Cartesian.@nexprs $N i -> res += (a[i] - b[i])^2
-        return sqrt(res)
-    end
-end
+distance(a::NTuple{N, <:Number}, b::NTuple{N, <:Number}) where {N} =
+    sqrt(sum(abs2, a .- b))
 
 """
     IGD(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}, [two_sided=true])
 
 The average Euclidean distance from the points of `A` to the points of `B`.
 """
-IGD(A::Vector{NTuple{N, F}}, B::Vector{NTuple{N, F}}) where {N, F <: Number} =
+IGD(A::Vector{<:NTuple{N, <:Number}}, B::Vector{<:NTuple{N, <:Number}}) where {N} =
     sum(a -> minimum(b -> distance(a, b), B), A) / length(A)
 
 """

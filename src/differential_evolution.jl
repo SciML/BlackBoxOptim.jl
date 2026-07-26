@@ -1,5 +1,3 @@
-using Distributions
-
 const DE_DefaultOptions = chain(
     DEX_DefaultOptions, ParamsDict(
         :SamplerRadius => 8,

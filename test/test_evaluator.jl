@@ -9,6 +9,7 @@ function evaluator_tests(make_eval::Function)
         fit1 = fitness([0.0, 1.0], e)
         @test BlackBoxOptim.num_evals(e) == 1
         @test BlackBoxOptim.last_fitness(e) == fit1
+        @test BlackBoxOptim.archived_fitness(fit1, e.archive) === fit1
 
         fit2 = fitness([2.0, 1.0], e)
         @test BlackBoxOptim.num_evals(e) == 2

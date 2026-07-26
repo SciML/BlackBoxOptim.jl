@@ -12,9 +12,8 @@ should use `MIN = true`.
 struct DominanceCone{F, N, MIN} <: SI.Region{F, N}
     pt::NTuple{N, F}
 
-    function DominanceCone{MIN}(pt::NTuple{N, F}) where {F, N, MIN}
-        (MIN isa Bool) || throw(ArgumentError("MIN should be true or false (got $MIN)"))
-        return new{F, N, MIN}(pt)
+    function DominanceCone(pt::Tuple, min::Bool)
+        return new{eltype(pt), length(pt), min}(pt)
     end
 end
 

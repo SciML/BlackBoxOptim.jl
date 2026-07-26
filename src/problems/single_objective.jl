@@ -7,7 +7,7 @@
 # Our primary focus is to implement all the problems from S1 since our
 # focus is on large-scale optimization but these problems also can be used
 # in lower dimensions.
-include(joinpath(dirname(@__FILE__()), "single_objective_base_functions.jl"))
+include("single_objective_base_functions.jl")
 Shekel10 = minimization_problem(shekel10, "Shekel10", (0.0, 10.0), 4, -10.5364)
 Shekel7 = minimization_problem(shekel7, "Shekel7", (0.0, 10.0), 4, -10.4029)
 Shekel5 = minimization_problem(shekel5, "Shekel5", (0.0, 10.0), 4, -10.1532)

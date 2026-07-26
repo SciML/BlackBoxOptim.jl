@@ -195,7 +195,7 @@ function add_candidate!(
     #@debug "New fitness: $(cand_fitness.orig) agg=$(cand_fitness.agg)"
     #@debug "Params: $candidate"
     # TODO don't traverse the tree twice: some SpatialIndexing API to combine isempty() with the follow-up findfirst() call?
-    if !isempty(a.frontier, DominanceCone{is_minimizing(a.fit_scheme)}(cand_fitness.index)) # candidate is dominated by frontier
+    if !isempty(a.frontier, DominanceCone(cand_fitness.index, is_minimizing(a.fit_scheme))) # candidate is dominated by frontier
         if length(a.frontier) <= a.max_size
             a.n_oversize_inserts = 0 # reset the counter since the size is ok
         end
@@ -217,7 +217,7 @@ function add_candidate!(
         a.last_progress = a.num_candidates
         hat = -1
         # remove all dominated frontier elements, if any
-        SI.subtract!(a.frontier, DominanceCone{!is_minimizing(a.fit_scheme)}(cand_fitness.index))
+        SI.subtract!(a.frontier, DominanceCone(cand_fitness.index, !is_minimizing(a.fit_scheme)))
         #@debug "Appended non-dominated element to the frontier"
         frontel = EpsBoxFrontierIndividual(cand_fitness, copy(candidate), tag, num_fevals, a.n_restarts)
         insert!(a.frontier, frontel)

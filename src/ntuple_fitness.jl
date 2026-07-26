@@ -49,7 +49,7 @@ struct ParetoFitnessScheme{N, F <: Number, MIN, AGG} <: TupleFitnessScheme{N, F,
 end
 
 # comparison and for minimizing Pareto scheme
-function hat_compare_pareto(u::NTuple{N, F}, v::NTuple{N, F}, expected::Int = 0) where {N, F}
+function hat_compare_pareto(u::NTuple{N, <:Number}, v::NTuple{N, <:Number}, expected::Int = 0) where {N}
     res = 0
     @inbounds for i in 1:N
         delta = u[i] - v[i]

@@ -1,4 +1,5 @@
 include("helper.jl")
+using BlackBoxOptim: Parameters, ParamsDict
 
 @testset "DictChain" begin
     @testset "Matching keys and value types for get()/set() methods" begin
