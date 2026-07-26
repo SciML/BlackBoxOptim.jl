@@ -178,14 +178,14 @@ safe_minfloat(::Type{F}, ::Type{I}) where {F <: AbstractFloat, I <: Integer} =
 end
 
 # vectorized ϵ-index
-@generated function ϵ_index(u::NTuple{N, F}, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}}) where {N, F, MIN}
-    return quote
-        pairs = Base.Cartesian.@ntuple $N i -> ϵ_index(u[i], ϵ[i], is_minimizing)
-        ix = Base.Cartesian.@ntuple $N i -> pairs[i][1]
-        sqrdist = zero(F)
-        Base.Cartesian.@nexprs $N i -> sqrdist += pairs[i][2]^2
-        return ix, sqrt(sqrdist)
+function ϵ_index(u::NTuple{N, F}, ϵ::Vector{F}, is_minimizing::Type{Val{MIN}}) where {N, F, MIN}
+    pairs = ntuple(i -> ϵ_index(u[i], ϵ[i], is_minimizing), N)
+    ix = ntuple(i -> pairs[i][1], N)
+    sqrdist = zero(F)
+    @inbounds for pair in pairs
+        sqrdist += pair[2]^2
     end
+    return ix, sqrt(sqrdist)
 end
 
 """
@@ -210,14 +210,8 @@ IndexedTupleFitness(u::NTuple{N, F}, agg::F, ϵ::F, is_minimizing::Type{Val{MIN}
 
 Base.convert(::Type{NTuple{N, F}}, fitness::IndexedTupleFitness{N, F}) where {N, F} = fitness.orig
 
-@generated function nafitness(::Type{IndexedTupleFitness{N, F}}) where {N, F}
-    return quote
-        IndexedTupleFitness(
-            Base.Cartesian.@ntuple($N, _ -> convert($F, NaN)),
-            NaN, 1.0, Val{true}
-        )
-    end
-end
+nafitness(::Type{IndexedTupleFitness{N, F}}) where {N, F} =
+    IndexedTupleFitness(ntuple(_ -> convert(F, NaN), N), NaN, 1.0, Val{true})
 
 # comparison for minimizing ϵ-box dominance scheme
 """

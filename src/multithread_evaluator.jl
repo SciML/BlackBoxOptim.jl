@@ -256,8 +256,8 @@ function run_mteval_worker(
         yield()
     end
     @debug "MultithreadEvaluator worker #$workerix started"
+    worker = eval.workers[workerix]
     try
-        worker = eval.workers[workerix]
         worker.is_available = true
         i = 0
         nlock_failed = 0

@@ -17,7 +17,7 @@ I.e. `dimmin(ss, i)` ≤ `x[i]` ≤ `dimmax(ss, i)` for each dimension `i`.
 """
 abstract type RectSearchSpace <: FixedDimensionSearchSpace end
 
-Base.@deprecate_binding ContinuousSearchSpace RectSearchSpace
+const ContinuousSearchSpace = RectSearchSpace
 
 """
 The point of the `SearchSpace`.

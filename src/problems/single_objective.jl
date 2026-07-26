@@ -56,7 +56,7 @@ abstract type TransformedProblem{FS, P <: OptimizationProblem} <: OptimizationPr
 
 orig_problem(tp::TransformedProblem) = tp.orig_problem # default implementation
 orig_problem_type(tp::Type{<:TransformedProblem{P}}) where {P} = P
-name(tp::TransformedProblem) = "TransformedProblem(" * name(sub_problem(tp)) * ")"
+name(tp::TransformedProblem) = "TransformedProblem(" * name(orig_problem(tp)) * ")"
 
 """
 A `TransformedProblem` subclass that shifts the objective argument and offsets the value:

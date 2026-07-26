@@ -25,7 +25,7 @@ mutable struct DiffEvoOpt{P <: Population, S <: IndividualsSelector, M <: Geneti
 
     function DiffEvoOpt(
             name::String, pop::P,
-            select::S = S(), modify::M = M(), embed::E = E()
+            select::S, modify::M, embed::E
         ) where
         {
             P <: Population, S <: IndividualsSelector,

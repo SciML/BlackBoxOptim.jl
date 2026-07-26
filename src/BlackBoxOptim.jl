@@ -17,7 +17,6 @@ import Printf
 using Printf: @printf, @sprintf
 import Random
 using Random: rand!, randn!, randperm, shuffle!
-import SpatialIndexing
 import Statistics
 using Statistics: mean, median, std
 import StatsAPI
@@ -114,8 +113,6 @@ module Utils
     include("utilities/halton_sequence.jl")
 end
 
-const SI = SpatialIndexing
-
 include("search_space.jl")
 include("parameters.jl")
 include("fitness.jl")
@@ -128,7 +125,6 @@ include("frequency_adaptation.jl")
 
 include("fit_individual.jl")
 include("archive.jl")
-include("archives/dominance_cone.jl")
 include("archives/epsbox_archive.jl")
 
 include("genetic_operators/genetic_operator.jl")

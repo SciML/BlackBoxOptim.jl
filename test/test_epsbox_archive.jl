@@ -1,6 +1,4 @@
 include("helper.jl")
-using SpatialIndexing
-SI = SpatialIndexing
 
 @testset "EpsBoxArchive" begin
     # check that frontier elements are mutually nondominated and
@@ -38,6 +36,7 @@ SI = SpatialIndexing
         a = EpsBoxArchive(scheme, max_size = 100)
 
         @test capacity(a) == 100
+        @test a.frontier isa Vector{BlackBoxOptim.EpsBoxFrontierIndividual{2, Float64}}
         @test length(a) == 0
         @test isempty(a)
         @test best_candidate(a) === nothing
@@ -69,12 +68,12 @@ SI = SpatialIndexing
         BlackBoxOptim.add_candidate!(a, (1.21, 2.11), [1.2, 3.0], 3)
         @test capacity(a) == 100
         @test length(a) == 2
-        @test findfirst(a.frontier, SI.Point((12, 21))) !== nothing
-        candi_leaf, candi_ix = findfirst(a.frontier, SI.Point((12, 21)))
-        @test candi_leaf[candi_ix].num_fevals == 3
+        candi_ix = findfirst(frontel -> fitness(frontel).index == (12, 21), a.frontier)
+        @test candi_ix !== nothing
+        @test a.frontier[candi_ix].num_fevals == 3
         @test best_fitness(a).orig == (1.21, 2.11)
         @test best_candidate(a) == [1.2, 3.0]
-        @test BlackBoxOptim.best_front_elem(a) == candi_leaf[candi_ix]
+        @test BlackBoxOptim.best_front_elem(a) == a.frontier[candi_ix]
         @test BlackBoxOptim.noprogress_streak(a) == 0
         @test BlackBoxOptim.tagcounts(a) == Dict(1 => 1, 3 => 1)
 

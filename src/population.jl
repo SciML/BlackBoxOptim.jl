@@ -264,7 +264,7 @@ abstract type AbstractPopulationCandidatesIterator{P <: PopulationWithFitness} e
 fitness_type(::Type{<:AbstractPopulationCandidatesIterator{P}}) where {P} = fitness_type(P)
 fitness_type(::T) where {T <: AbstractPopulationCandidatesIterator} = fitness_type(T)
 
-Base.eltype(itt::Type{<:AbstractPopulationCandidatesIterator{P}}) where {P} = candidate_type(population_type(P))
+Base.eltype(::Type{<:AbstractPopulationCandidatesIterator{P}}) where {P} = candidate_type(P)
 Base.eltype(::T) where {T <: AbstractPopulationCandidatesIterator} = eltype(T)
 
 """

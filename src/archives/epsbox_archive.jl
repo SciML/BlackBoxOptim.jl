@@ -28,14 +28,6 @@ tag(indi::FrontierIndividual) = indi.tag
 Individual stored in `EpsBoxArchive`.
 """
 const EpsBoxFrontierIndividual{N, F <: Number} = FrontierIndividual{IndexedTupleFitness{N, F}}
-const FrontierSpatialIndex{N, F <: Number} = SI.SpatialIndex{Int, N, EpsBoxFrontierIndividual{N, F}}
-const FrontierRTree{N, F <: Number} = SI.RTree{Int, N, EpsBoxFrontierIndividual{N, F}}
-
-# traits for spatial indexing
-SI.mbrtrait(::Type{EpsBoxFrontierIndividual{N, F}}) where {N, F} = SI.HasMBR{SI.Rect{Int, N}}
-SI.mbr(indi::EpsBoxFrontierIndividual{N, F}) where {N, F} = SI.Rect(indi.fitness.index, indi.fitness.index)
-SI.idtrait(::Type{<:EpsBoxFrontierIndividual}) = SI.HasID{Int}
-SI.id(indi::EpsBoxFrontierIndividual) = indi.num_fevals
 
 EpsBoxFrontierIndividual(
     fitness::IndexedTupleFitness{N, F},
@@ -62,9 +54,7 @@ mutable struct EpsBoxArchive{N, F, FS <: EpsBoxDominanceFitnessScheme} <: Archiv
     n_oversize_inserts::Int           # how many times the candidates were inserted into oversized archive
 
     max_size::Int         # maximal frontier size
-    # TODO allow different frontier containers?
-    # see e.g. Altwaijry & Menai "Data Structures in Multi-Objective Evolutionary Algorithms", 2012
-    frontier::FrontierRTree{N, F}  # candidates along the fitness Pareto frontier
+    frontier::Vector{EpsBoxFrontierIndividual{N, F}}  # candidates along the fitness Pareto frontier
 
     EpsBoxArchive(
         fit_scheme::EpsBoxDominanceFitnessScheme{N, F};
@@ -76,10 +66,7 @@ mutable struct EpsBoxArchive{N, F, FS <: EpsBoxDominanceFitnessScheme} <: Archiv
         fit_scheme, time(), 0,
         EpsBoxFrontierIndividual{N, F}(nafitness(fit_scheme), Individual(), 0, 0, 0, NaN),
         0, 0, 0, 0, max_size,
-        FrontierRTree{N, F}(
-            leaf_capacity = leaf_capacity,
-            branch_capacity = branch_capacity
-        )
+        EpsBoxFrontierIndividual{N, F}[]
     )
 end
 
@@ -119,13 +106,7 @@ Returns `nothing` if frontier is empty.
 """
 function rand_front_elem(a::EpsBoxArchive)
     isempty(a) && return nothing
-
-    node = a.frontier.root
-    while SI.level(node) > 1
-        # descend to a random child
-        node = node[rand(eachindex(SI.children(node)))]
-    end
-    return node[rand(eachindex(SI.children(node)))]
+    return rand(a.frontier)
 end
 
 """
@@ -145,20 +126,10 @@ best_front_elem(a::EpsBoxArchive) = has_best_front_elem(a) ? a.best_front_elem :
 best_candidate(a::EpsBoxArchive) = has_best_front_elem(a) ? params(a.best_front_elem) : nothing
 best_fitness(a::EpsBoxArchive) = has_best_front_elem(a) ? fitness(a.best_front_elem) : nafitness(a.fit_scheme)
 
-function rebuild_frontier!(a::EpsBoxArchive)
-    # bulk-reload R-tree (leave leaves underfilled to postpone reinserts)
-    a.frontier = SI.load!(
-        similar(a.frontier), a.frontier,
-        leaf_fill = floor(Int, a.frontier.fill_factor * SI.capacity(SI.Leaf, a.frontier))
-    )
-    return a
-end
-
 function notify!(a::EpsBoxArchive, event::Symbol)
     if event == :restart
         a.n_restarts += 1
         a.last_restart = a.num_candidates
-        a.n_restarts == 1 && rebuild_frontier!(a)
     end
     return a
 end
@@ -194,39 +165,31 @@ function add_candidate!(
     end
     #@debug "New fitness: $(cand_fitness.orig) agg=$(cand_fitness.agg)"
     #@debug "Params: $candidate"
-    # TODO don't traverse the tree twice: some SpatialIndexing API to combine isempty() with the follow-up findfirst() call?
-    if !isempty(a.frontier, DominanceCone(cand_fitness.index, is_minimizing(a.fit_scheme))) # candidate is dominated by frontier
+    if any(frontel -> first(hat_compare(fitness(frontel), cand_fitness, a.fit_scheme)) == -1, a.frontier)
         if length(a.frontier) <= a.max_size
             a.n_oversize_inserts = 0 # reset the counter since the size is ok
         end
         return a
     end
     # find the Pareto front element with exactly the same indexed fitness as the candidate
-    frontix = findfirst(a.frontier, SI.Point(cand_fitness.index))
+    frontix = findfirst(frontel -> fitness(frontel).index == cand_fitness.index, a.frontier)
     if frontix !== nothing # found front element, no eps-progress
-        front_leaf, frontel_pos = frontix
-        frontel = front_leaf[frontel_pos]
+        frontel = a.frontier[frontix]
         front_fitness = fitness(frontel)
         hat, index_match = hat_compare(cand_fitness, front_fitness, a.fit_scheme)
         @assert index_match # should have the same indexed fitness since that's how it was found
         if hat < 0 # new fitness dominates (but not eps-dominates) the one in archive, replace the element
-            SI.children(front_leaf)[frontel_pos] = frontel =
+            a.frontier[frontix] = frontel =
                 EpsBoxFrontierIndividual(cand_fitness, copyto!(frontel.params, candidate), tag, num_fevals, a.n_restarts)
         end
     else # eps-progress: non-dominated solution that has some eps-indices different from all current ones
         a.last_progress = a.num_candidates
         hat = -1
-        # remove all dominated frontier elements, if any
-        SI.subtract!(a.frontier, DominanceCone(cand_fitness.index, !is_minimizing(a.fit_scheme)))
-        #@debug "Appended non-dominated element to the frontier"
+        filter!(frontel -> first(hat_compare(cand_fitness, fitness(frontel), a.fit_scheme)) != -1, a.frontier)
         frontel = EpsBoxFrontierIndividual(cand_fitness, copy(candidate), tag, num_fevals, a.n_restarts)
-        insert!(a.frontier, frontel)
+        push!(a.frontier, frontel)
         if length(a.frontier) > a.max_size
             a.n_oversize_inserts += 1 # throw(error("Pareto frontier exceeds maximum size"))
-        end
-        # rebuild the frontier if it has changed significantly since the last rebuild
-        if a.n_restarts > 1 && a.frontier.nelem_insertions > 3length(a.frontier)
-            rebuild_frontier!(a)
         end
     end
     # check if the new candidate has better aggregate score

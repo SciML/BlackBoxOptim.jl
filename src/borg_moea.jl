@@ -40,7 +40,7 @@ mutable struct BorgMOEA{FS <: FitnessScheme, V <: Evaluator, P <: Population, M 
     function BorgMOEA(
             problem::O,
             pop::P, recombinate::Vector{CrossoverOperator},
-            modify::M = M(), embed::E = E(), params = EMPTY_PARAMS
+            modify::M, embed::E, params = EMPTY_PARAMS
         ) where
         {
             O <: OptimizationProblem, P <: Population,

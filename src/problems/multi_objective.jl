@@ -19,30 +19,29 @@ end
 Generate the points of the hypersurface using the
 discretization defined by ϵ-box fitness schema.
 """
-@generated function generate(
+function generate(
         surf::Hypersurface{N},
         fs::EpsBoxDominanceFitnessScheme{N, F},
         ::Type{Val{NP}},
         param_step::Vector{F} = 0.1 * fs.ϵ
     ) where {N, F, NP}
-    return quote
-        #archive = EpsBoxArchive(fs)
-        pf = Dict{NTuple{N, Int}, IndexedTupleFitness{N, F}}()
-        param = fill!(Vector{Float64}(undef, N - 1), 0.0)
-        #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N - 1) t d -> range(
+    pf = Dict{NTuple{N, Int}, IndexedTupleFitness{N, F}}()
+    param = fill!(Vector{Float64}(undef, N - 1), 0.0)
+    ranges = ntuple(
+        d -> range(
             dimmin(surf.parameter_space, d), stop = dimmax(surf.parameter_space, d),
             length = ceil(Int, dimdelta(surf.parameter_space, d) / param_step[d])
-        ) d -> param[d] = t_d begin
-            fit = surf.manifold(param, Val{NP})
-            if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
-                ifit = convert(IndexedTupleFitness, fit, fs)
-                pf[ifit.index] = ifit
-                #add_candidate!(archive, convert(IndexedTupleFitness, fit, fs), Individual())
-            end
+        ), N - 1
+    )
+    for values in Iterators.product(ranges...)
+        param .= values
+        fit = surf.manifold(param, Val{NP})
+        if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
+            ifit = convert(IndexedTupleFitness, fit, fs)
+            pf[ifit.index] = ifit
         end
-        return pf
     end
+    return pf
 end
 
 """
