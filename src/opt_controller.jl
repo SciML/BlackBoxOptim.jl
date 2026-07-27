@@ -456,7 +456,7 @@ lastrun(oc::OptController) = oc.runcontrollers[end]
 
 Update the `OptController` parameters.
 """
-function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_DICT)
+function update_parameters!(oc::OptController, parameters::Parameters = EMPTY_PARAMS)
     parameters = convert(ParamsDict, parameters)
 
     # Most parameters cannot be changed since the problem and optimizer has already
@@ -479,9 +479,9 @@ end
 
 function init_rng!(parameters::Parameters)
     return if haskey(parameters, :RandomizeRngSeed)
-        warn("Parameter RandomizeRngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim.")
+        @warn "Parameter RandomizeRngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim."
     elseif haskey(parameters, :RngSeed)
-        warn("Parameter RngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim.")
+        @warn "Parameter RngSeed is obsolete and no longer have an effect; you need to set the seed yourself before calling into BlackBoxOptim."
     end
 end
 

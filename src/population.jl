@@ -264,8 +264,7 @@ abstract type AbstractPopulationCandidatesIterator{P <: PopulationWithFitness} e
 fitness_type(::Type{<:AbstractPopulationCandidatesIterator{P}}) where {P} = fitness_type(P)
 fitness_type(::T) where {T <: AbstractPopulationCandidatesIterator} = fitness_type(T)
 
-Base.IteratorEltype(::Type{<:AbstractPopulationCandidatesIterator}) = Base.HasEltype()
-Base.eltype(itt::Type{<:AbstractPopulationCandidatesIterator{P}}) where {P} = candidate_type(population_type(P))
+Base.eltype(::Type{<:AbstractPopulationCandidatesIterator{P}}) where {P} = candidate_type(P)
 Base.eltype(::T) where {T <: AbstractPopulationCandidatesIterator} = eltype(T)
 
 """
@@ -282,11 +281,13 @@ struct PopulationCandidatesIterator{P <: PopulationWithFitness, F} <: AbstractPo
         PopulationCandidatesIterator(pop, skipHasFitness ? nothing : pop.nafitness)
 end
 
-Base.IteratorSize(::Type{<:PopulationCandidatesIterator}) = Base.SizeUnknown()
-Base.IteratorSize(::Type{<:PopulationCandidatesIterator{<:Any, Nothing}}) = Base.HasLength()
-Base.length(it::PopulationCandidatesIterator{<:Any, Nothing}) = popsize(it.pop)
+Base.length(it::PopulationCandidatesIterator{P, Nothing}) where {P <: PopulationWithFitness} = popsize(it.pop)
+Base.length(it::PopulationCandidatesIterator) = count(
+    ix -> isequal(fitness(it.pop, ix), it.nafitness),
+    eachindex(it.pop.fitness)
+)
 
-Base.iterate(it::PopulationCandidatesIterator{<:Any, Nothing}, ix::Integer = 0) =
+Base.iterate(it::PopulationCandidatesIterator{<:PopulationWithFitness, Nothing}, ix::Integer = 0) =
     ix < length(it) ? (acquire_candi(it.pop, ix + 1), ix + 1) : nothing
 
 function Base.iterate(it::PopulationCandidatesIterator, ix::Integer = 0)

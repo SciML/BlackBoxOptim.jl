@@ -1,6 +1,6 @@
 name = "BlackBoxOptim"
 uuid = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
-version = "0.6.10"
+version = "0.7.0"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
@@ -9,8 +9,8 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
-SpatialIndexing = "d4ead438-fe20-5cc5-a293-4fd39a41b74c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
@@ -29,13 +29,13 @@ LinearAlgebra = "1"
 Logging = "1"
 Printf = "1"
 Random = "1"
-Requires = "1"
 SHA = "0.7"
 SafeTestsets = "0.1, 1"
 SciMLTesting = "2.4"
 Serialization = "1"
 Sockets = "1"
-SpatialIndexing = "0.1.0"
+Statistics = "1"
+StatsAPI = "1"
 StatsBase = "0.34.11"
 Test = "1"
 julia = "1.10"
@@ -53,8 +53,7 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
-SpatialIndexing = "d4ead438-fe20-5cc5-a293-4fd39a41b74c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["CSV", "Serialization", "SHA", "LinearAlgebra", "Test", "Random", "Printf", "Distributed", "Logging", "SafeTestsets", "SciMLTesting", "SpatialIndexing"]
+test = ["CSV", "Serialization", "SHA", "LinearAlgebra", "Test", "Random", "Printf", "Distributed", "Logging", "SafeTestsets", "SciMLTesting"]

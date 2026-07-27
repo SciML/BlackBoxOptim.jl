@@ -19,30 +19,29 @@ end
 Generate the points of the hypersurface using the
 discretization defined by ϵ-box fitness schema.
 """
-@generated function generate(
+function generate(
         surf::Hypersurface{N},
         fs::EpsBoxDominanceFitnessScheme{N, F},
         ::Type{Val{NP}},
         param_step::Vector{F} = 0.1 * fs.ϵ
     ) where {N, F, NP}
-    return quote
-        #archive = EpsBoxArchive(fs)
-        pf = Dict{NTuple{N, Int}, IndexedTupleFitness{N, F}}()
-        param = fill!(Vector{Float64}(undef, N - 1), 0.0)
-        #hat_compare = HatCompare(fs)
-        Base.Cartesian.@nloops $(N - 1) t d -> range(
+    pf = Dict{NTuple{N, Int}, IndexedTupleFitness{N, F}}()
+    param = fill!(Vector{Float64}(undef, N - 1), 0.0)
+    ranges = ntuple(
+        d -> range(
             dimmin(surf.parameter_space, d), stop = dimmax(surf.parameter_space, d),
             length = ceil(Int, dimdelta(surf.parameter_space, d) / param_step[d])
-        ) d -> param[d] = t_d begin
-            fit = surf.manifold(param, Val{NP})
-            if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
-                ifit = convert(IndexedTupleFitness, fit, fs)
-                pf[ifit.index] = ifit
-                #add_candidate!(archive, convert(IndexedTupleFitness, fit, fs), Individual())
-            end
+        ), N - 1
+    )
+    for values in Iterators.product(ranges...)
+        param .= values
+        fit = surf.manifold(param, Val{NP})
+        if !isnafitness(fit, fs) # NA if given parameters do not correspond to any point on the manifold
+            ifit = convert(IndexedTupleFitness, fit, fs)
+            pf[ifit.index] = ifit
         end
-        return pf
     end
+    return pf
 end
 
 """
@@ -65,20 +64,15 @@ end
 
 Euclidean distance from `a` to `b`.
 """
-@generated function distance(a::NTuple{N, F}, b::NTuple{N, F}) where {N, F}
-    return quote
-        res = 0.0
-        Base.Cartesian.@nexprs $N i -> res += (a[i] - b[i])^2
-        return sqrt(res)
-    end
-end
+distance(a::NTuple{N, <:Number}, b::NTuple{N, <:Number}) where {N} =
+    sqrt(sum(abs2, a .- b))
 
 """
     IGD(A::Vector{NTuple{N,F}}, B::Vector{NTuple{N,F}}, [two_sided=true])
 
 The average Euclidean distance from the points of `A` to the points of `B`.
 """
-IGD(A::Vector{NTuple{N, F}}, B::Vector{NTuple{N, F}}) where {N, F <: Number} =
+IGD(A::Vector{<:NTuple{N, <:Number}}, B::Vector{<:NTuple{N, <:Number}}) where {N} =
     sum(a -> minimum(b -> distance(a, b), B), A) / length(A)
 
 """

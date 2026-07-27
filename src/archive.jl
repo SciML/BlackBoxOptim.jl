@@ -12,7 +12,8 @@ fitness_scheme(a::Archive) = a.fit_scheme
 
 Converts given fitness `fit` to the format used by the archive `a`.
 """
-archived_fitness(fit::Any, a::Archive) = convert(fitness_type(a), fit, fitness_scheme(a))
+archived_fitness(fit::F, ::Archive{F}) where {F} = fit
+archived_fitness(fit, a::Archive) = convert(fitness_type(a), fit, fitness_scheme(a))
 
 """
 Base class for individuals stored in `Archive`.

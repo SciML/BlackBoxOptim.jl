@@ -1,5 +1,3 @@
-using Distributions
-
 # FIXME implement actual distribution using Distributions.MixtureModel
 """
 A mixture of 2 Cauchy distributions.

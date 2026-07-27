@@ -24,6 +24,16 @@ mutable struct MTFitnessEvalJob{FA, NFA, I, S} <: AbstractFitnessEvaluationJob{F
     results_lock::Threads.SpinLock
     results::Vector{Candidate{FA}}
     discarded::Bool
+
+    function MTFitnessEvalJob(
+            candidates::I, next_candidate::Tuple{Candidate{FA}, S}, nafitness::NFA,
+            npending::Threads.Atomic{Int}, results_lock::Threads.SpinLock,
+            results::Vector{Candidate{FA}}, discarded::Bool
+        ) where {FA, NFA, I, S}
+        return new{FA, NFA, I, S}(
+            candidates, next_candidate, nafitness, npending, results_lock, results, discarded
+        )
+    end
 end
 
 # all candidates have been iterated over by workers
@@ -201,18 +211,11 @@ function MTFitnessEvalJob(eval::MultithreadEvaluator, candidates::Any, nafitness
     end
 end
 
-# create MTEvaluatorWorker and assign it to a given tread
-# HACK (ab)use julia internals to make sure that workers are spawned on different threads
-# HACK "inspired" by enq_work() (base/task.jl) and Channel ctor (base/channels.jl)
 function MTEvaluatorWorker(
-        eval::MultithreadEvaluator, workerix::Integer, tid::Integer,
+        eval::MultithreadEvaluator, workerix::Integer, _tid::Integer,
         readysteadygo::Threads.Atomic{Int}
     )
-    task = Task(() -> run_mteval_worker(eval, workerix, readysteadygo))
-    task.sticky = true
-    ccall(:jl_set_task_tid, Cvoid, (Any, Cint), task, tid - 1)
-    push!(Base.Workqueues[tid], task)
-    ccall(:jl_wakeup_thread, Cvoid, (Int16,), (tid - 1) % Int16)
+    task = Threads.@spawn :default run_mteval_worker(eval, workerix, readysteadygo)
     return MTEvaluatorWorker(task)
 end
 
@@ -253,8 +256,8 @@ function run_mteval_worker(
         yield()
     end
     @debug "MultithreadEvaluator worker #$workerix started"
+    worker = eval.workers[workerix]
     try
-        worker = eval.workers[workerix]
         worker.is_available = true
         i = 0
         nlock_failed = 0

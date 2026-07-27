@@ -40,7 +40,7 @@ mutable struct BorgMOEA{FS <: FitnessScheme, V <: Evaluator, P <: Population, M 
     function BorgMOEA(
             problem::O,
             pop::P, recombinate::Vector{CrossoverOperator},
-            modify::M = M(), embed::E = E(), params = EMPTY_PARAMS
+            modify::M, embed::E, params = EMPTY_PARAMS
         ) where
         {
             O <: OptimizationProblem, P <: Population,
@@ -320,7 +320,6 @@ struct BorgMutantsIterator{P <: PopulationWithFitness, A <: BorgMOEA} <: Abstrac
         new{typeof(alg.population), A}(alg, last_nonmutant)
 end
 
-Base.IteratorSize(::Type{<:BorgMutantsIterator}) = Base.HasLength()
 Base.length(it::BorgMutantsIterator) = popsize(it.alg.population) - it.last_nonmutant
 
 Base.iterate(it::BorgMutantsIterator, ix::Integer = it.last_nonmutant) =

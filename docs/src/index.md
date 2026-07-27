@@ -25,7 +25,6 @@ BlackBoxOptim.FunctionBasedProblemFamily
 BlackBoxOptim.GeneticOperator
 BlackBoxOptim.GibbsMutationOperator
 BlackBoxOptim.IndexedTupleFitness
-BlackBoxOptim.Individual
 BlackBoxOptim.MaximizingFitnessScheme
 BlackBoxOptim.MinimizationProblemFamily
 BlackBoxOptim.MinimizingFitnessScheme
@@ -35,9 +34,6 @@ BlackBoxOptim.MutationOperator
 BlackBoxOptim.NoMutation
 BlackBoxOptim.OptimizationProblem
 BlackBoxOptim.Optimizer
-BlackBoxOptim.ParamBounds
-BlackBoxOptim.Parameters
-BlackBoxOptim.ParamsDict
 BlackBoxOptim.ParamsDictChain
 BlackBoxOptim.ParentCentricCrossover
 BlackBoxOptim.ParetoFitnessScheme

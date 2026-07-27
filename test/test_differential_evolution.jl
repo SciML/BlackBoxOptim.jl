@@ -1,4 +1,5 @@
 include("helper.jl")
+using BlackBoxOptim: ParamsDict
 
 @testset "Differential evolution optimizer" begin
 

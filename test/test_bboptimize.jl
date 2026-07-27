@@ -78,7 +78,7 @@ end
         #end
 
         @testset "func & SearchRange given but no NumDimensions specified" begin
-            @test_throws KeyError BlackBoxOptim.setup_problem(sum, ParamsDict(:SearchRange => (0.0, 1.0)))
+            @test_throws KeyError BlackBoxOptim.setup_problem(sum, BlackBoxOptim.ParamsDict(:SearchRange => (0.0, 1.0)))
         end
     end
 
