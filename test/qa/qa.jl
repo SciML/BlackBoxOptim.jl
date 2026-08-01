@@ -16,6 +16,11 @@ end
 run_qa(
     BlackBoxOptim;
     ei_kwargs = (;
+        all_qualified_accesses_are_public = (;
+            # Sockets non-public: `localhost` names the loopback address the plot
+            # server binds to. Sockets exports `@ip_str` but not `localhost`.
+            ignore = (:localhost,),
+        ),
         all_explicit_imports_are_public = (;
             ignore = (
                 # BlackBoxOptim's own internals, reached from its own extension.
