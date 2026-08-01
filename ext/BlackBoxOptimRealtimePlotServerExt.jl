@@ -1,6 +1,8 @@
 module BlackBoxOptimRealtimePlotServerExt
 
-using HTTP, Sockets, JSON
+using HTTP: HTTP
+using JSON: JSON
+using Sockets: @ip_str
 using BlackBoxOptim: RealtimePlot, replace_template_param, hasnewdata, printmsg
 
 const VegaLiteWebsocketFrontEndTemplate = """
@@ -58,7 +60,7 @@ end
 
 function HTTP.serve(
         plot::RealtimePlot{:VegaLite},
-        host = Sockets.localhost, port::Integer = 8081;
+        host = ip"127.0.0.1", port::Integer = 8081;
         websocketport::Integer = rand_websocket_port(),
         mindelay::Number = 1.0,
         kwargs...
@@ -76,7 +78,7 @@ HTTP.serve!(plot::RealtimePlot, args...; kwargs...) =
     @async(HTTP.serve(plot, args...; kwargs...))
 
 function websocket_serve(plot::RealtimePlot, port::Integer, mindelay::Number)
-    HTTP.WebSockets.listen(Sockets.localhost, UInt16(port)) do ws
+    HTTP.WebSockets.listen(ip"127.0.0.1", UInt16(port)) do ws
         while true
             if hasnewdata(plot)
                 len = length(plot.data)
