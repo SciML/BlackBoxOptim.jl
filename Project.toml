@@ -1,6 +1,6 @@
 name = "BlackBoxOptim"
 uuid = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
-version = "0.6.10"
+version = "0.6.11"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
@@ -15,9 +15,11 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [extensions]
+BlackBoxOptimRealtimePlotServerExt = ["HTTP", "JSON", "Sockets"]
 
 [compat]
 CSV = "0.10"
@@ -25,6 +27,7 @@ Compat = "4.18.1"
 Distributed = "1"
 Distributions = "0.25.88"
 HTTP = "1, 2.1"
+JSON = "0.21, 1"
 LinearAlgebra = "1"
 Logging = "1"
 Printf = "1"

@@ -1,6 +1,8 @@
 module BlackBoxOptimRealtimePlotServerExt
 
-using HTTP, Sockets, JSON
+using HTTP: HTTP
+using JSON: JSON
+using Sockets: Sockets
 using BlackBoxOptim: RealtimePlot, replace_template_param, hasnewdata, printmsg
 
 const VegaLiteWebsocketFrontEndTemplate = """
