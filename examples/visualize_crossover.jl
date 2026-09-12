@@ -17,12 +17,12 @@ function plot_crossover(
     children_mtx = hcat(
         [
             hcat(
-                    apply!(
-                        xover, [fill!(Individual(undef, size(parents, 1)), NaN) for _ in 1:numchildren(xover)],
-                        zeros(Int, numchildren(xover)), parents_pop,
-                        shuffle_parents ? shuffle(parent_ixs) : parent_ixs
-                    )...
-                ) for _ in 1:n
+                apply!(
+                    xover, [fill!(Individual(undef, size(parents, 1)), NaN) for _ in 1:numchildren(xover)],
+                    zeros(Int, numchildren(xover)), parents_pop,
+                    shuffle_parents ? shuffle(parent_ixs) : parent_ixs
+                )...
+            ) for _ in 1:n
         ]...
     )
     plot(
