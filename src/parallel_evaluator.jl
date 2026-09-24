@@ -134,13 +134,13 @@ function ParallelEvaluator(
         0, nafitness(fs), nafitness(FA),
         [
             RemoteChannel(
-                    function ()
-                        # create fake channel and put problem there
-                        ch = Channel{ParallelEvaluatorWorker{P}}(1)
-                        put!(ch, ParallelEvaluatorWorker(copy(problem)))
-                        return ch
+                function ()
+                    # create fake channel and put problem there
+                    ch = Channel{ParallelEvaluatorWorker{P}}(1)
+                    put!(ch, ParallelEvaluatorWorker(copy(problem)))
+                    return ch
                 end, pid
-                ) for pid in pids
+            ) for pid in pids
         ],
         ParallelEvaluationState(archive, length(pids))
     )
