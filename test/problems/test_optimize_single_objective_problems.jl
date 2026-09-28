@@ -1,3 +1,4 @@
+include("../helper.jl")
 include("common.jl")
 
 @testset "Optimize single objective problems in 5, 10, and 30 dimensions with DE" begin
