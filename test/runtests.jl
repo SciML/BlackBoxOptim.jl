@@ -45,6 +45,7 @@ function core_body()
     @safetestset "Tracing" include("test_tracing.jl")
     @safetestset "Top-level bboptimize" include("test_toplevel_bboptimize.jl")
     @safetestset "Smoketest bboptimize" include("test_smoketest_bboptimize.jl")
+    @safetestset "bboptimize" include("test_bboptimize.jl")
     @safetestset "Precompile workload API" include("test_precompile_workload.jl")
 
     @safetestset "Set candidate" include("test_set_candidate.jl")
@@ -52,6 +53,7 @@ function core_body()
 
     @safetestset "Problem" include("problems/test_problem.jl")
     @safetestset "Single objective problems" include("problems/test_single_objective.jl")
+    @safetestset "Optimize single objective problems" include("problems/test_optimize_single_objective_problems.jl")
 
     @safetestset "Generating set search" include("test_generating_set_search.jl")
     @safetestset "Direct search with probabilistic descent" include("test_direct_search_with_probabilistic_descent.jl")

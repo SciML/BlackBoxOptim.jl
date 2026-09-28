@@ -1,3 +1,5 @@
+include("helper.jl")
+
 rosenbrock2d(x) = 100.0 * abs2(x[2] - x[1]^2) + abs2(x[1] - 1.0)
 
 function rosenbrock(x)
