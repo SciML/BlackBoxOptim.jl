@@ -23,7 +23,7 @@ Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 BlackBoxOptimRealtimePlotServerExt = ["HTTP", "JSON", "Sockets"]
 
 [compat]
-CSV = "0.10"
+CSV = "0.10, 1.1"
 Compat = "4.18.1"
 Distributed = "1"
 Distributions = "0.25.88"
@@ -34,7 +34,7 @@ Logging = "1"
 PrecompileTools = "1.2"
 Printf = "1"
 Random = "1"
-SHA = "0.7"
+SHA = "0.7, 1"
 SafeTestsets = "0.1"
 SciMLTesting = "2.4"
 Serialization = "1"
